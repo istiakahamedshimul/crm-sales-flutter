@@ -13,7 +13,13 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
-  late Future<List<Customer>> customers = apiClient.getCustomers();
+  late Future<List<Customer>> customers;
+
+  @override
+  void initState() {
+    super.initState();
+    customers = apiClient.getCustomers();
+  }
 
   @override
   Widget build(BuildContext context) {

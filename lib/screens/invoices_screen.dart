@@ -15,7 +15,13 @@ class InvoicesScreen extends StatefulWidget {
 }
 
 class _InvoicesScreenState extends State<InvoicesScreen> {
-  late Future<List<Invoice>> invoices = apiClient.getInvoices();
+  late Future<List<Invoice>> invoices;
+
+  @override
+  void initState() {
+    super.initState();
+    invoices = apiClient.getInvoices();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,10 +114,16 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
   final amount = TextEditingController();
   final discount = TextEditingController(text: '0');
   final tax = TextEditingController(text: '0');
-  late Future<List<Customer>> customers = apiClient.getCustomers();
+  late Future<List<Customer>> customers;
   int? customerId;
   bool loading = false;
   String error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    customers = apiClient.getCustomers();
+  }
 
   @override
   void dispose() {
@@ -133,6 +145,8 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
         future: customers,
         builder: (context, snapshot) {
           final data = snapshot.data ?? [];
+          final loadingCustomers = snapshot.connectionState == ConnectionState.waiting;
+          final customerError = snapshot.hasError ? snapshot.error.toString().replaceFirst('Exception: ', '') : '';
           return ListView(
             shrinkWrap: true,
             children: [
@@ -142,6 +156,11 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: 14),
+              if (loadingCustomers)
+                const Center(child: CircularProgressIndicator())
+              else if (customerError.isNotEmpty)
+                Text(customerError, style: const TextStyle(color: Colors.red))
+              else
               DropdownButtonFormField<int>(
                 value: customerId,
                 decoration: const InputDecoration(labelText: 'Customer'),
