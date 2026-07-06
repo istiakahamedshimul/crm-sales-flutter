@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:real_estate_crm_sales/screens/home_screen.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
 
 class SalesCrmApp extends StatelessWidget {
-  const SalesCrmApp({super.key});
+  const SalesCrmApp({super.key, required this.isLoggedIn});
+
+  final bool isLoggedIn;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +38,7 @@ class SalesCrmApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(),
+      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
     );
   }
 }

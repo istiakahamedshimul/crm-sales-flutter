@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
@@ -18,7 +19,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   void initState() {
     super.initState();
-    customers = apiClient.getCustomers();
+    _load();
+  }
+
+  void _load() {
+    customers = apiClient.getCustomers().then((list) {
+      debugPrint('[Customers] loaded ${list.length} records');
+      return list;
+    }).catchError((e) {
+      debugPrint('[Customers] error: $e');
+      throw e;
+    });
   }
 
   @override
@@ -27,7 +38,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       title: 'My Customers',
       subtitle: 'PROFILE LIST',
       action: IconButton.filledTonal(
-        onPressed: () => setState(() => customers = apiClient.getCustomers()),
+        onPressed: () => setState(_load),
         icon: const Icon(Icons.refresh),
       ),
       child: FutureBuilder<List<Customer>>(
@@ -39,6 +50,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           }
 
           if (snapshot.hasError) {
+            debugPrint('[Customers] build error: ${snapshot.error}');
             return Center(
               heightFactor: 4,
               child: Column(
@@ -53,7 +65,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: () => setState(() => customers = apiClient.getCustomers()),
+                    onPressed: () => setState(_load),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                   ),
@@ -63,6 +75,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           }
 
           final data = snapshot.data ?? [];
+          debugPrint('[Customers] rendering ${data.length} items');
           if (data.isEmpty) {
             return const EmptyState(text: 'No customer profiles yet.');
           }
