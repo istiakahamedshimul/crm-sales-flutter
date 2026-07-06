@@ -1,16 +1,42 @@
-# real_estate_crm_sales
+# CRM Sales App — Flutter
 
-A new Flutter project.
+Real Estate CRM mobile app for sales executives built with Flutter.
 
-## Getting Started
+## Tech Stack
+- Flutter
+- Dart
+- REST API integration
 
-This project is a starting point for a Flutter application.
+## Setup
 
-A few resources to get you started if this is your first Flutter project:
+```powershell
+cd sales-flutter
+flutter pub get
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## API Configuration
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Located in `lib/config/app_config.dart`
+
+- Android Emulator: `http://10.0.2.2:5000/api`
+- Physical Device: Change `ApiClient.baseUrl` to your computer's LAN IP
+
+## Features
+
+- Login
+- Dashboard
+- Leads management
+- Customers
+- Follow-ups
+- Invoices
+- Payments
+- Commissions
+
+## Branch Strategy
+
+```
+main    ← production
+dev     ← integration/testing
+istiak  ← lead dev working branch
+```
