@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:real_estate_crm_sales/config/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/follow_up.dart';
@@ -11,6 +13,18 @@ import 'package:real_estate_crm_sales/models/payment.dart';
 
 class ApiClient {
   String token = '';
+
+  Future<void> loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token') ?? '';
+    debugPrint('[ApiClient] session loaded, token: ${token.isNotEmpty ? 'present' : 'empty'}');
+  }
+
+  Future<void> clearSession() async {
+    token = '';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+  }
 
   Map<String, String> get headers => {
         'Content-Type': 'application/json',
@@ -27,6 +41,8 @@ class ApiClient {
     _throwIfFailed(response);
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     token = data['token'] as String;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 
   Future<Map<String, dynamic>> getProfile() async {
@@ -172,11 +188,10 @@ class ApiClient {
   }
 
   Future<List<Map<String, dynamic>>> _getList(String path) async {
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiBaseUrl}$path'),
-      headers: headers,
-    );
-
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    debugPrint('[API] GET $uri');
+    final response = await http.get(uri, headers: headers);
+    debugPrint('[API] ${response.statusCode} $path => ${response.body}');
     _throwIfFailed(response);
     final data = jsonDecode(response.body) as List<dynamic>;
     return data.cast<Map<String, dynamic>>();

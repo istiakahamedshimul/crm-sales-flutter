@@ -5,7 +5,9 @@ import 'package:real_estate_crm_sales/screens/dashboard_screen.dart';
 import 'package:real_estate_crm_sales/screens/followups_screen.dart';
 import 'package:real_estate_crm_sales/screens/invoices_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
+import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
+import 'package:real_estate_crm_sales/services/api_client.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const InvoicesScreen(),
       const PaymentsScreen(),
       const CommissionScreen(),
+      const SizedBox(), // logout placeholder
     ];
 
     return Scaffold(
@@ -35,7 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: index,
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        onDestinationSelected: (value) => setState(() => index = value),
+        onDestinationSelected: (value) {
+          if (value == 7) { _logout(); return; }
+          setState(() => index = value);
+        },
         destinations: const [
           NavigationDestination(
               icon: Icon(Icons.home_work_outlined),
@@ -65,8 +71,20 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.savings_outlined),
               selectedIcon: Icon(Icons.savings_rounded),
               label: 'Wallet'),
+          NavigationDestination(
+              icon: Icon(Icons.logout_outlined),
+              selectedIcon: Icon(Icons.logout_rounded),
+              label: 'Logout'),
         ],
       ),
+    );
+  }
+
+  Future<void> _logout() async {
+    await apiClient.clearSession();
+    if (!mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 }
