@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/invoice.dart';
@@ -122,7 +123,13 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
   @override
   void initState() {
     super.initState();
-    customers = apiClient.getCustomers();
+    customers = apiClient.getCustomers().then((list) {
+      debugPrint('[InvoiceSheet] customers loaded: ${list.length}');
+      return list;
+    }).catchError((e) {
+      debugPrint('[InvoiceSheet] customers error: $e');
+      throw e;
+    });
   }
 
   @override
@@ -221,7 +228,7 @@ class _CreateInvoiceSheetState extends State<_CreateInvoiceSheet> {
       );
       if (mounted) Navigator.pop(context, true);
     } catch (exception) {
-      setState(() => error = exception.toString());
+      setState(() => error = exception.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => loading = false);
     }
