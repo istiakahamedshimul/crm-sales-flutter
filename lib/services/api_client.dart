@@ -10,6 +10,8 @@ import 'package:real_estate_crm_sales/models/follow_up.dart';
 import 'package:real_estate_crm_sales/models/invoice.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
+import 'package:real_estate_crm_sales/models/project.dart';
+import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 
 class ApiClient {
   String token = '';
@@ -67,6 +69,55 @@ class ApiClient {
   Future<List<Customer>> getCustomers() async {
     final data = await _getList('/customers');
     return data.map((item) => Customer.fromJson(item)).toList();
+  }
+
+  Future<List<ProjectSubGroup>> getSubGroups() async {
+    final data = await _getList('/subgroups');
+    return data.map(ProjectSubGroup.fromJson).toList();
+  }
+
+  Future<List<CrmProject>> getProjects() async {
+    final data = await _getList('/projects');
+    return data.map(CrmProject.fromJson).toList();
+  }
+
+  Future<List<VehicleBooking>> getVehicleBookings() async {
+    final data = await _getList('/vehicle-bookings');
+    return data.map(VehicleBooking.fromJson).toList();
+  }
+
+  Future<void> createVehicleBooking({
+    required DateTime visitDate,
+    required int personCount,
+    required String visitPlace,
+    required String pickupPlace,
+  }) async {
+    final now = DateTime.now();
+    final response = await http.post(
+      Uri.parse('${AppConfig.apiBaseUrl}/vehicle-bookings'),
+      headers: headers,
+      body: jsonEncode({
+        'visitDate': _dateOnly(visitDate),
+        'personCount': personCount,
+        'visitPlace': visitPlace,
+        'pickupPlace': pickupPlace,
+        'clientLocalDateTime': now.toIso8601String(),
+        'timezoneOffsetMinutes': now.timeZoneOffset.inMinutes,
+      }),
+    );
+    _throwIfFailed(response);
+  }
+
+  String _dateOnly(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+
+  Future<void> updateCustomerProject(int customerId, int? projectId) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.apiBaseUrl}/customers/$customerId/project'),
+      headers: headers,
+      body: jsonEncode({'projectId': projectId}),
+    );
+    _throwIfFailed(response);
   }
 
   Future<List<Invoice>> getInvoices() async {
@@ -155,7 +206,6 @@ class ApiClient {
       body: jsonEncode({
         'customerId': customerId,
         'projectId': null,
-        'unitId': null,
         'salesExecutiveId': null,
         'dueDate': dueDate.toUtc().toIso8601String(),
         'amount': amount,

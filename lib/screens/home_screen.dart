@@ -7,6 +7,7 @@ import 'package:real_estate_crm_sales/screens/invoices_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
+import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const InvoicesScreen(),
       const PaymentsScreen(),
       const CommissionScreen(),
+      const VehicleBookingsScreen(),
       const SizedBox(), // logout placeholder
     ];
 
@@ -39,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (value) {
-          if (value == 7) { _logout(); return; }
+          if (value == 8) { _logout(); return; }
           setState(() => index = value);
         },
         destinations: const [
@@ -71,6 +73,10 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.savings_outlined),
               selectedIcon: Icon(Icons.savings_rounded),
               label: 'Wallet'),
+          NavigationDestination(
+              icon: Icon(Icons.directions_car_outlined),
+              selectedIcon: Icon(Icons.directions_car_rounded),
+              label: 'Vehicle'),
           NavigationDestination(
               icon: Icon(Icons.logout_outlined),
               selectedIcon: Icon(Icons.logout_rounded),

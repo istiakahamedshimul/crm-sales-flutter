@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
+import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
@@ -103,13 +103,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         if (customer.email != null && customer.email!.isNotEmpty)
                           Text(customer.email!),
                         Text('Lead #${customer.leadId ?? '-'}'),
+                        Text(customer.project == null
+                            ? 'No project selected'
+                            : '${customer.subGroup} - ${customer.project}'),
                       ],
                     ),
                     isThreeLine: true,
-                    trailing: Text(customer.paymentStatus,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xff0f766e))),
+                    trailing: IconButton(
+                      tooltip: 'Update customer project',
+                      icon: const Icon(Icons.edit_location_alt_outlined),
+                      onPressed: () => _editProject(customer),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -120,4 +124,78 @@ class _CustomersScreenState extends State<CustomersScreen> {
       ),
     );
   }
+
+  Future<void> _editProject(Customer customer) async {
+    final selections = await Future.wait([
+      apiClient.getSubGroups(),
+      apiClient.getProjects(),
+    ]);
+    if (!mounted) return;
+    final subgroups = selections[0].cast<ProjectSubGroup>();
+    final projects = selections[1].cast<CrmProject>();
+    var subgroupId = customer.subGroupId;
+    var type = customer.projectType;
+    var projectId = customer.projectId;
+    String? error;
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(builder: (context, setSheetState) {
+        final types = projects
+            .where((p) => subgroupId == null || p.subGroupId == subgroupId)
+            .map((p) => p.type)
+            .toSet()
+            .toList()..sort();
+        final filtered = projects.where((p) =>
+            (subgroupId == null || p.subGroupId == subgroupId) &&
+            (type == null || p.type == type)).toList();
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text('Update ${customer.name} project', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: subgroupId,
+              decoration: const InputDecoration(labelText: 'Subgroup (Real Capital Group)'),
+              items: [for (final group in subgroups) DropdownMenuItem(value: group.id, child: Text(group.name))],
+              onChanged: (value) => setSheetState(() { subgroupId = value; type = null; projectId = null; }),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              value: types.contains(type) ? type : null,
+              decoration: const InputDecoration(labelText: 'Project type'),
+              items: [for (final value in types) DropdownMenuItem(value: value, child: Text(_projectType(value)))],
+              onChanged: subgroupId == null ? null : (value) => setSheetState(() { type = value; projectId = null; }),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              value: filtered.any((p) => p.id == projectId) ? projectId : null,
+              decoration: const InputDecoration(labelText: 'Project'),
+              items: [for (final project in filtered) DropdownMenuItem(value: project.id, child: Text(project.name))],
+              onChanged: type == null ? null : (value) => setSheetState(() => projectId = value),
+            ),
+            if (error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(error!, style: const TextStyle(color: Colors.red))),
+            const SizedBox(height: 16),
+            SizedBox(width: double.infinity, child: FilledButton(
+              onPressed: projectId == null ? null : () async {
+                try {
+                  await apiClient.updateCustomerProject(customer.id, projectId);
+                  if (context.mounted) Navigator.pop(context, true);
+                } catch (e) {
+                  setSheetState(() => error = e.toString().replaceFirst('Exception: ', ''));
+                }
+              },
+              child: const Text('Save project'),
+            )),
+          ]),
+        );
+      }),
+    );
+    if (saved == true && mounted) setState(_load);
+  }
+
+  static String _projectType(int value) => const [
+    'Apartment', 'Flat', 'Plot', 'Land', 'Commercial Space', 'Shop', 'Office Space'
+  ][value];
 }
