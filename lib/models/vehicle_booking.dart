@@ -1,29 +1,15 @@
 class VehicleBooking {
-  const VehicleBooking({
-    required this.id,
-    required this.visitDate,
-    required this.personCount,
-    required this.visitPlace,
-    required this.pickupPlace,
-    required this.status,
-    this.adminRemarks,
-  });
-
-  final int id;
+  const VehicleBooking({required this.id, required this.visitDate, required this.visitTime,
+    required this.personCount, required this.customer, required this.project, required this.pickupPlace,
+    required this.purpose, required this.status, this.vehicle, this.driver, this.adminRemarks});
+  final int id, personCount, status;
   final DateTime visitDate;
-  final int personCount;
-  final String visitPlace;
-  final String pickupPlace;
-  final int status;
-  final String? adminRemarks;
-
-  factory VehicleBooking.fromJson(Map<String, dynamic> json) => VehicleBooking(
-        id: json['id'] as int,
-        visitDate: DateTime.parse(json['visitDate'] as String),
-        personCount: json['personCount'] as int,
-        visitPlace: json['visitPlace'] as String? ?? '',
-        pickupPlace: json['pickupPlace'] as String? ?? '',
-        status: json['status'] as int,
-        adminRemarks: json['adminRemarks'] as String?,
-      );
+  final String visitTime, customer, project, pickupPlace, purpose;
+  final String? vehicle, driver, adminRemarks;
+  factory VehicleBooking.fromJson(Map<String,dynamic> json)=>VehicleBooking(
+    id:json['id'] as int, visitDate:DateTime.parse(json['visitDate'] as String),
+    visitTime:json['visitTime'] as String? ?? '', personCount:json['personCount'] as int,
+    customer:json['customer'] as String? ?? '', project:json['project'] as String? ?? '',
+    pickupPlace:json['pickupPlace'] as String? ?? '', purpose:json['purpose'] as String? ?? 'Site Visit',
+    status:json['status'] as int, vehicle:json['vehicle'] as String?, driver:json['driver'] as String?, adminRemarks:json['adminRemarks'] as String?);
 }

@@ -5,139 +5,36 @@ import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
 
-class VehicleBookingsScreen extends StatefulWidget {
-  const VehicleBookingsScreen({super.key});
-
-  @override
-  State<VehicleBookingsScreen> createState() => _VehicleBookingsScreenState();
-}
-
+class VehicleBookingsScreen extends StatefulWidget { const VehicleBookingsScreen({super.key}); @override State<VehicleBookingsScreen> createState()=>_VehicleBookingsScreenState(); }
 class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
-  late Future<List<VehicleBooking>> bookings;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  void _load() => bookings = apiClient.getVehicleBookings();
-
-  @override
-  Widget build(BuildContext context) => ScreenFrame(
-        title: 'Vehicle Visits',
-        subtitle: 'BOOKING REQUESTS',
-        action: IconButton.filled(
-          onPressed: _openBookingForm,
-          icon: const Icon(Icons.add),
-          tooltip: 'Book vehicle',
-        ),
-        child: FutureBuilder<List<VehicleBooking>>(
-          future: bookings,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(heightFactor: 8, child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text(snapshot.error.toString().replaceFirst('Exception: ', '')));
-            }
-            final data = snapshot.data ?? [];
-            if (data.isEmpty) return const EmptyState(text: 'No vehicle bookings yet.');
-            return Column(children: [
-              for (final booking in data) ...[
-                SalesCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Expanded(child: Text(_date(booking.visitDate), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
-                    Chip(label: Text(_status(booking.status))),
-                  ]),
-                  Text('${booking.personCount} person${booking.personCount == 1 ? '' : 's'}'),
-                  Text('Pickup: ${booking.pickupPlace}'),
-                  Text('Visit: ${booking.visitPlace}'),
-                  if (booking.adminRemarks?.isNotEmpty == true) Text('Admin: ${booking.adminRemarks}'),
-                ])),
-                const SizedBox(height: 12),
-              ]
-            ]);
-          },
-        ),
-      );
-
-  Future<void> _openBookingForm() async {
-    final now = DateTime.now();
-    final afterCutoff = now.hour >= 19;
-    var visitDate = DateTime(now.year, now.month, now.day).add(Duration(days: afterCutoff ? 2 : 1));
-    final visitPlace = TextEditingController();
-    final pickupPlace = TextEditingController();
-    final persons = TextEditingController(text: '1');
-    String? error;
-    var saving = false;
-
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(builder: (context, setSheetState) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
-        child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Book vehicle for visit', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('Next-day requests must be submitted before 7:00 PM local time.'),
-          const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Visit date'),
-            subtitle: Text(_date(visitDate)),
-            trailing: const Icon(Icons.calendar_month),
-            onTap: () async {
-              final current = DateTime.now();
-              final first = DateTime(current.year, current.month, current.day).add(
-                  Duration(days: current.hour >= 19 ? 2 : 1));
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: visitDate.isBefore(first) ? first : visitDate,
-                firstDate: first,
-                lastDate: first.add(const Duration(days: 365)),
-              );
-              if (picked != null) setSheetState(() => visitDate = picked);
-            },
-          ),
-          TextField(controller: persons, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Number of persons')),
-          const SizedBox(height: 12),
-          TextField(controller: pickupPlace, decoration: const InputDecoration(labelText: 'Pickup place')),
-          const SizedBox(height: 12),
-          TextField(controller: visitPlace, decoration: const InputDecoration(labelText: 'Visit place')),
-          if (error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(error!, style: const TextStyle(color: Colors.red))),
-          const SizedBox(height: 16),
-          SizedBox(width: double.infinity, child: FilledButton(
-            onPressed: saving ? null : () async {
-              final count = int.tryParse(persons.text);
-              if (count == null || count < 1 || pickupPlace.text.trim().isEmpty || visitPlace.text.trim().isEmpty) {
-                setSheetState(() => error = 'Enter a valid person count, pickup place, and visit place.');
-                return;
-              }
-              setSheetState(() { saving = true; error = null; });
-              try {
-                await apiClient.createVehicleBooking(
-                  visitDate: visitDate,
-                  personCount: count,
-                  visitPlace: visitPlace.text.trim(),
-                  pickupPlace: pickupPlace.text.trim(),
-                );
-                if (context.mounted) Navigator.pop(context, true);
-              } catch (e) {
-                setSheetState(() { saving = false; error = e.toString().replaceFirst('Exception: ', ''); });
-              }
-            },
-            child: Text(saving ? 'Submitting...' : 'Submit booking'),
-          )),
-        ])),
-      )),
-    );
-    visitPlace.dispose();
-    pickupPlace.dispose();
-    persons.dispose();
-    if (saved == true && mounted) setState(_load);
-  }
-
-  static String _date(DateTime date) => '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  static String _status(int value) => const ['Pending', 'Approved', 'Rejected', 'Cancelled'][value];
+ late Future<List<VehicleBooking>> bookings;
+ @override void initState(){super.initState();_load();} void _load()=>bookings=apiClient.getVehicleBookings();
+ @override Widget build(BuildContext context)=>ScreenFrame(title:'Customer Visits',subtitle:'TRANSPORT REQUESTS',action:IconButton.filled(onPressed:_openForm,icon:const Icon(Icons.add),tooltip:'New visit request'),child:FutureBuilder<List<VehicleBooking>>(future:bookings,builder:(context,s){
+  if(s.connectionState==ConnectionState.waiting)return const Center(heightFactor:8,child:CircularProgressIndicator());
+  if(s.hasError)return Center(child:Text(s.error.toString().replaceFirst('Exception: ','')));
+  final data=s.data??[]; if(data.isEmpty)return const EmptyState(text:'No visit requests yet. Use the + button to create one.');
+  return Column(children:[_summary(data),const SizedBox(height:16),for(final b in data)...[_bookingCard(b),const SizedBox(height:12)]]);
+ }));
+ Widget _summary(List<VehicleBooking> data)=>Container(width:double.infinity,padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xff0f766e),Color(0xff115e59)]),borderRadius:BorderRadius.circular(22)),child:Row(children:[const CircleAvatar(radius:24,backgroundColor:Colors.white24,child:Icon(Icons.directions_car_filled,color:Colors.white)),const SizedBox(width:14),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Customer visit transport',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:17)),const SizedBox(height:4),Text('${data.where((x)=>x.status==0).length} pending · ${data.where((x)=>x.status==1).length} approved',style:const TextStyle(color:Colors.white70))]))]));
+ Widget _bookingCard(VehicleBooking b)=>SalesCard(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xffe8f5f3),borderRadius:BorderRadius.circular(12)),child:const Icon(Icons.location_on_outlined,color:Color(0xff0f766e))),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(b.customer,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:16)),Text(b.project,style:const TextStyle(color:Color(0xff667085)))])),StatusPill(label:_status(b.status),color:_statusColor(b.status))]),const Divider(height:26),_detail(Icons.calendar_today_outlined,'${_date(b.visitDate)} at ${b.visitTime}'),_detail(Icons.people_outline,'${b.personCount} visitor${b.personCount==1?'':'s'} · ${b.purpose}'),_detail(Icons.my_location_outlined,b.pickupPlace),if(b.vehicle?.isNotEmpty==true)_detail(Icons.directions_car_outlined,'${b.vehicle}${b.driver?.isNotEmpty==true?' · ${b.driver}':''}'),if(b.adminRemarks?.isNotEmpty==true)Container(margin:const EdgeInsets.only(top:8),padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xfffff7e6),borderRadius:BorderRadius.circular(10)),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.info_outline,size:18,color:Color(0xffb54708)),const SizedBox(width:8),Expanded(child:Text(b.adminRemarks!))]))]));
+ Future<void> _openForm() async {
+  final now=DateTime.now();var date=DateTime(now.year,now.month,now.day).add(Duration(days:now.hour>=19?2:1));var time=const TimeOfDay(hour:10,minute:0);String purpose='Site Visit';int? customerId,projectId;String? error;bool saving=false;
+  final pickup=TextEditingController(),persons=TextEditingController(text:'1'),additional=TextEditingController();
+  try {
+   final results=await Future.wait([apiClient.getCustomers(),apiClient.getProjects()]);final customers=results[0] as List<dynamic>;final projects=results[1] as List<dynamic>;
+   if(!mounted)return;
+   final saved=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,backgroundColor:Colors.white,shape:const RoundedRectangleBorder(borderRadius:BorderRadius.vertical(top:Radius.circular(28))),builder:(context)=>StatefulBuilder(builder:(context,setSheet)=>Padding(padding:EdgeInsets.fromLTRB(20,12,20,MediaQuery.viewInsetsOf(context).bottom+24),child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Center(child:Container(width:44,height:5,decoration:BoxDecoration(color:const Color(0xffd0d5dd),borderRadius:BorderRadius.circular(99)))),const SizedBox(height:18),Text('Request customer visit',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w900)),const SizedBox(height:4),const Text('Admin will review and assign a vehicle.',style:TextStyle(color:Color(0xff667085))),const SizedBox(height:18),
+    const Text('Only customers assigned to you are shown.',style:TextStyle(color:Color(0xff0f766e),fontWeight:FontWeight.w700,fontSize:12)),const SizedBox(height:8),
+    DropdownButtonFormField<int>(isExpanded:true,decoration:const InputDecoration(labelText:'Customer *',prefixIcon:Icon(Icons.person_outline)),items:customers.map((c)=>DropdownMenuItem<int>(value:c.id as int,child:Text('${c.name} · ${c.phone}',overflow:TextOverflow.ellipsis))).toList(),onChanged:(v)=>setSheet(()=>customerId=v)),const SizedBox(height:12),
+    DropdownButtonFormField<int>(isExpanded:true,decoration:const InputDecoration(labelText:'Project *',prefixIcon:Icon(Icons.apartment_outlined)),items:projects.map((p)=>DropdownMenuItem<int>(value:p.id as int,child:Text(p.name as String))).toList(),onChanged:(v)=>setSheet(()=>projectId=v)),const SizedBox(height:8),
+    Row(children:[Expanded(child:ListTile(contentPadding:EdgeInsets.zero,title:const Text('Visit date'),subtitle:Text(_date(date)),trailing:const Icon(Icons.calendar_month),onTap:()async{final first=DateTime.now().add(Duration(days:DateTime.now().hour>=19?2:1));final picked=await showDatePicker(context:context,initialDate:date,firstDate:DateTime(first.year,first.month,first.day),lastDate:first.add(const Duration(days:365)));if(picked!=null)setSheet(()=>date=picked);})),Expanded(child:ListTile(contentPadding:EdgeInsets.zero,title:const Text('Visit time'),subtitle:Text(time.format(context)),trailing:const Icon(Icons.schedule),onTap:()async{final picked=await showTimePicker(context:context,initialTime:time);if(picked!=null)setSheet(()=>time=picked);}))]),
+    TextField(controller:persons,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Number of visitors *',prefixIcon:Icon(Icons.people_outline))),const SizedBox(height:12),TextField(controller:pickup,decoration:const InputDecoration(labelText:'Pickup location *',prefixIcon:Icon(Icons.my_location_outlined))),const SizedBox(height:12),
+    DropdownButtonFormField<String>(value:purpose,decoration:const InputDecoration(labelText:'Purpose *',prefixIcon:Icon(Icons.flag_outlined)),items:const ['Site Visit','Booking','Customer Meeting','Inspection'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setSheet(()=>purpose=v);}),const SizedBox(height:12),TextField(controller:additional,maxLines:2,decoration:const InputDecoration(labelText:'Additional information',alignLabelWithHint:true)),
+    if(error!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text(error!,style:const TextStyle(color:Colors.red))),const SizedBox(height:18),SizedBox(width:double.infinity,child:FilledButton.icon(icon:const Icon(Icons.send_outlined),label:Text(saving?'Submitting...':'Submit request'),onPressed:saving?null:()async{final count=int.tryParse(persons.text);if(customerId==null||projectId==null||count==null||count<1||pickup.text.trim().isEmpty){setSheet(()=>error='Complete all required fields.');return;}setSheet((){saving=true;error=null;});try{await apiClient.createVehicleBooking(customerId:customerId!,projectId:projectId!,visitDate:date,visitTime:time,personCount:count,pickupPlace:pickup.text.trim(),purpose:purpose,additionalInformation:additional.text.trim());if(context.mounted)Navigator.pop(context,true);}catch(e){setSheet((){saving=false;error=e.toString().replaceFirst('Exception: ','');});}}))
+   ])))));if(saved==true&&mounted)setState(_load);
+  }catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString().replaceFirst('Exception: ',''))));}finally{pickup.dispose();persons.dispose();additional.dispose();}
+ }
+ static Widget _detail(IconData i,String t)=>Padding(padding:const EdgeInsets.only(bottom:9),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(i,size:18,color:const Color(0xff667085)),const SizedBox(width:9),Expanded(child:Text(t,style:const TextStyle(color:Color(0xff344054))))]));
+ static String _date(DateTime d)=>'${d.day.toString().padLeft(2,'0')}/${d.month.toString().padLeft(2,'0')}/${d.year}';static String _status(int v)=>const ['Pending','Approved','Rejected','Cancelled'][v];static Color _statusColor(int v)=>const [Color(0xffb54708),Color(0xff067647),Color(0xffb42318),Color(0xff667085)][v];
 }

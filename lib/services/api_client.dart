@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,20 +88,28 @@ class ApiClient {
   }
 
   Future<void> createVehicleBooking({
+    required int customerId,
+    required int projectId,
     required DateTime visitDate,
+    required TimeOfDay visitTime,
     required int personCount,
-    required String visitPlace,
     required String pickupPlace,
+    required String purpose,
+    String? additionalInformation,
   }) async {
     final now = DateTime.now();
     final response = await http.post(
       Uri.parse('${AppConfig.apiBaseUrl}/vehicle-bookings'),
       headers: headers,
       body: jsonEncode({
+        'customerId': customerId,
+        'projectId': projectId,
         'visitDate': _dateOnly(visitDate),
+        'visitTime': '${visitTime.hour.toString().padLeft(2, '0')}:${visitTime.minute.toString().padLeft(2, '0')}',
         'personCount': personCount,
-        'visitPlace': visitPlace,
         'pickupPlace': pickupPlace,
+        'purpose': purpose,
+        'additionalInformation': additionalInformation,
         'clientLocalDateTime': now.toIso8601String(),
         'timezoneOffsetMinutes': now.timeZoneOffset.inMinutes,
       }),
