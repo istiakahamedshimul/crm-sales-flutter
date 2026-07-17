@@ -16,17 +16,21 @@ import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 
 class ApiClient {
   String token = '';
+  int? userId;
 
   Future<void> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token') ?? '';
+    userId = prefs.getInt('userId');
     debugPrint('[ApiClient] session loaded, token: ${token.isNotEmpty ? 'present' : 'empty'}');
   }
 
   Future<void> clearSession() async {
     token = '';
+    userId = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('userId');
   }
 
   Map<String, String> get headers => {
@@ -44,8 +48,10 @@ class ApiClient {
     _throwIfFailed(response);
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     token = data['token'] as String;
+    userId = data['userId'] as int;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+    await prefs.setInt('userId', userId!);
   }
 
   Future<Map<String, dynamic>> getProfile() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:real_estate_crm_sales/screens/home_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
+import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -66,9 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await apiClient.login(email.text, password.text);
+      await oneSignalService.login('crm-user-${apiClient.userId}');
       if (!mounted) return;
+      final initialIndex =
+          oneSignalService.consumeAssignedLeadsNavigation() ? 1 : 0;
       await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+            builder: (_) => HomeScreen(initialIndex: initialIndex)),
       );
     } catch (exception) {
       setState(

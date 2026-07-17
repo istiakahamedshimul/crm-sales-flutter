@@ -9,16 +9,25 @@ import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
 import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
+import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int index = 0;
+  late int index;
+
+  @override
+  void initState() {
+    super.initState();
+    index = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (value) {
-          if (value == 8) { _logout(); return; }
+          if (value == 8) {
+            _logout();
+            return;
+          }
           setState(() => index = value);
         },
         destinations: const [
@@ -87,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logout() async {
+    await oneSignalService.logout();
     await apiClient.clearSession();
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
