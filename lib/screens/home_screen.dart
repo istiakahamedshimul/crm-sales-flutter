@@ -7,17 +7,27 @@ import 'package:real_estate_crm_sales/screens/invoices_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
+import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
+import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int index = 0;
+  late int index;
+
+  @override
+  void initState() {
+    super.initState();
+    index = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const InvoicesScreen(),
       const PaymentsScreen(),
       const CommissionScreen(),
+      const VehicleBookingsScreen(),
       const SizedBox(), // logout placeholder
     ];
 
@@ -39,7 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (value) {
-          if (value == 7) { _logout(); return; }
+          if (value == 8) {
+            _logout();
+            return;
+          }
           setState(() => index = value);
         },
         destinations: const [
@@ -72,6 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedIcon: Icon(Icons.savings_rounded),
               label: 'Wallet'),
           NavigationDestination(
+              icon: Icon(Icons.directions_car_outlined),
+              selectedIcon: Icon(Icons.directions_car_rounded),
+              label: 'Vehicle'),
+          NavigationDestination(
               icon: Icon(Icons.logout_outlined),
               selectedIcon: Icon(Icons.logout_rounded),
               label: 'Logout'),
@@ -81,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logout() async {
+    await oneSignalService.logout();
     await apiClient.clearSession();
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
