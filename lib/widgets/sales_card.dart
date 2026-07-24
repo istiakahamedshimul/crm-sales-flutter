@@ -99,3 +99,29 @@ class StatusPill extends StatelessWidget {
     );
   }
 }
+
+class WhatsAppIcon extends StatelessWidget {
+  const WhatsAppIcon({super.key, this.size = 20, this.color});
+
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color ?? const Color(0xff22c55e), // WhatsApp green
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.phone_rounded,
+        size: size * 0.6,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+

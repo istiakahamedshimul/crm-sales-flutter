@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
+import 'package:real_estate_crm_sales/screens/followups_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
@@ -10,14 +11,75 @@ import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
 
-class LeadsScreen extends StatefulWidget {
+class LeadsScreen extends StatelessWidget {
   const LeadsScreen({super.key});
 
   @override
-  State<LeadsScreen> createState() => _LeadsScreenState();
+  Widget build(BuildContext context) {
+    return const DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Color(0xfff8fafc),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Material(
+                color: Colors.white,
+                elevation: 0.5,
+                child: TabBar(
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.assignment_ind_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Active Leads', style: TextStyle(fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.history_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Follow-up Logs', style: TextStyle(fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  indicatorColor: Color(0xff0f766e),
+                  labelColor: Color(0xff0f766e),
+                  unselectedLabelColor: Color(0xff64748b),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  physics: NeverScrollableScrollPhysics(), // Taps switch pages, swiping switches tabs in main PageView
+                  children: [
+                    ActiveLeadsTabContent(),
+                    FollowUpsScreen(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _LeadsScreenState extends State<LeadsScreen> {
+class ActiveLeadsTabContent extends StatefulWidget {
+  const ActiveLeadsTabContent({super.key});
+
+  @override
+  State<ActiveLeadsTabContent> createState() => _ActiveLeadsTabContentState();
+}
+
+class _ActiveLeadsTabContentState extends State<ActiveLeadsTabContent> {
   late Future<List<Lead>> leads = apiClient.getLeads();
   int? selectedProjectType;
 
@@ -367,25 +429,25 @@ class _LeadCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _ActionButton(
-                    icon: Icons.call,
+                    icon: const Icon(Icons.call, size: 18, color: Color(0xff475569)),
                     onPressed: () => callPhone(context, lead.phone),
                     tooltip: 'Call client',
                   ),
                   const SizedBox(width: 6),
                   _ActionButton(
-                    icon: Icons.chat_bubble_outline_rounded,
+                    icon: const WhatsAppIcon(size: 18), // Custom branded WhatsApp icon widget
                     onPressed: () => openWhatsApp(context, lead.phone),
                     tooltip: 'WhatsApp client',
                   ),
                   const SizedBox(width: 6),
                   _ActionButton(
-                    icon: Icons.edit_note_rounded,
+                    icon: const Icon(Icons.edit_note_rounded, size: 20, color: Color(0xff475569)),
                     onPressed: onEditProject,
                     tooltip: 'Link Project',
                   ),
                   const SizedBox(width: 6),
                   _ActionButton(
-                    icon: Icons.add_task_rounded,
+                    icon: const Icon(Icons.add_task_rounded, size: 18, color: Color(0xff0f766e)),
                     onPressed: onFollowUp,
                     highlight: true,
                     tooltip: 'Log Followup',
@@ -408,7 +470,7 @@ class _ActionButton extends StatelessWidget {
     required this.tooltip,
   });
 
-  final IconData icon;
+  final Widget icon;
   final VoidCallback onPressed;
   final bool highlight;
   final String tooltip;
@@ -435,11 +497,7 @@ class _ActionButton extends StatelessWidget {
               width: 1.0,
             ),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: highlight ? const Color(0xff0f766e) : const Color(0xff475569),
-          ),
+          child: Center(child: icon),
         ),
       ),
     );

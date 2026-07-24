@@ -7,6 +7,8 @@ import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
 import 'package:real_estate_crm_sales/shared/contact_actions.dart';
+import 'package:real_estate_crm_sales/screens/login_screen.dart';
+import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
 
@@ -57,14 +59,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _logout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to sign out from your sales workspace?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xffe11d48)),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    await oneSignalService.logout();
+    await apiClient.clearSession();
+    if (!context.mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScreenFrame(
       title: 'Today\'s Work',
       subtitle: 'SALES PIPELINE',
-      action: IconButton.filledTonal(
-        onPressed: () => setState(() => data = _load()),
-        icon: const Icon(Icons.refresh_rounded, size: 20),
+      action: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton.filledTonal(
+            onPressed: () => setState(() => data = _load()),
+            icon: const Icon(Icons.refresh_rounded, size: 20),
+            tooltip: 'Refresh Dashboard',
+          ),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout_rounded, color: Color(0xffe11d48), size: 20),
+            tooltip: 'Log Out',
+          ),
+        ],
       ),
       child: FutureBuilder<_DashboardData>(
         future: data,
@@ -313,7 +357,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
                                     onPressed: () => openWhatsApp(context, lead.phone),
-                                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                                    icon: const WhatsAppIcon(size: 16),
                                     tooltip: 'WhatsApp client',
                                   ),
                                   const SizedBox(width: 8),

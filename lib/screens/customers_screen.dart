@@ -1,21 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
+import 'package:real_estate_crm_sales/models/project.dart';
+import 'package:real_estate_crm_sales/screens/payments_screen.dart';
+import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
-import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
 import 'package:real_estate_crm_sales/shared/contact_actions.dart';
 
-class CustomersScreen extends StatefulWidget {
+class CustomersScreen extends StatelessWidget {
   const CustomersScreen({super.key});
 
   @override
-  State<CustomersScreen> createState() => _CustomersScreenState();
+  Widget build(BuildContext context) {
+    return const DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: Color(0xfff8fafc),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Material(
+                color: Colors.white,
+                elevation: 0.5,
+                child: TabBar(
+                  isScrollable: false,
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.contacts_rounded, size: 16),
+                          SizedBox(width: 6),
+                          Text('Clients', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.receipt_long_rounded, size: 16),
+                          SizedBox(width: 6),
+                          Text('Pay', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.directions_car_rounded, size: 16),
+                          SizedBox(width: 6),
+                          Text('Visits', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  indicatorColor: Color(0xff0f766e),
+                  labelColor: Color(0xff0f766e),
+                  unselectedLabelColor: Color(0xff64748b),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  physics: NeverScrollableScrollPhysics(), // Taps switch pages, swiping switches tabs in main PageView
+                  children: [
+                    ActiveCustomersTabContent(),
+                    PaymentsScreen(),
+                    VehicleBookingsScreen(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _CustomersScreenState extends State<CustomersScreen> {
+class ActiveCustomersTabContent extends StatefulWidget {
+  const ActiveCustomersTabContent({super.key});
+
+  @override
+  State<ActiveCustomersTabContent> createState() => _ActiveCustomersTabContentState();
+}
+
+class _ActiveCustomersTabContentState extends State<ActiveCustomersTabContent> {
   late Future<List<Customer>> customers;
 
   @override
@@ -396,10 +471,10 @@ class _CustomerCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
+               Expanded(
                 child: FilledButton.tonalIcon(
                   onPressed: () => openWhatsApp(context, customer.phone),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                  icon: const WhatsAppIcon(size: 16), // Custom branded WhatsApp icon widget
                   label: const Text('WhatsApp'),
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
