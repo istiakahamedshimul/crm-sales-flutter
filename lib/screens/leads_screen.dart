@@ -4,6 +4,7 @@ import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
+import 'package:real_estate_crm_sales/shared/contact_actions.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
@@ -39,7 +40,9 @@ class _LeadsScreenState extends State<LeadsScreen> {
           final data = snapshot.data ?? [];
           final filteredData = selectedProjectType == null
               ? data
-              : data.where((lead) => lead.projectType == selectedProjectType).toList();
+              : data
+                  .where((lead) => lead.projectType == selectedProjectType)
+                  .toList();
           if (data.isEmpty) {
             return const EmptyState(
                 text:
@@ -92,7 +95,9 @@ class _LeadsScreenState extends State<LeadsScreen> {
               if (filteredData.isEmpty)
                 const EmptyState(text: 'No leads match this property type.'),
               for (final lead in filteredData) ...[
-                _LeadCard(lead: lead, onFollowUp: () => openFollowUp(lead),
+                _LeadCard(
+                    lead: lead,
+                    onFollowUp: () => openFollowUp(lead),
                     onEditProject: () => editProject(lead)),
                 const SizedBox(height: 12),
               ],
@@ -122,31 +127,46 @@ class _LeadsScreenState extends State<LeadsScreen> {
     var selected = lead.projectId;
     final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(builder: (context, setDialog) =>
-        AlertDialog(
-          title: Text('Edit project: ${lead.customerName}'),
-          content: DropdownButtonFormField<int>(
-            isExpanded: true,
-            value: selected,
-            decoration: const InputDecoration(labelText: 'Project'),
-            items: projects.map((CrmProject p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
-            onChanged: (value) => setDialog(() => selected = value),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-            FilledButton(onPressed: selected == null ? null : () async {
-              await apiClient.updateLeadProject(lead.id, selected!);
-              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
-            }, child: const Text('Save'))
-          ],
-        )),
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialog) => AlertDialog(
+                title: Text('Edit project: ${lead.customerName}'),
+                content: DropdownButtonFormField<int>(
+                  isExpanded: true,
+                  value: selected,
+                  decoration: const InputDecoration(labelText: 'Project'),
+                  items: projects
+                      .map((CrmProject p) =>
+                          DropdownMenuItem(value: p.id, child: Text(p.name)))
+                      .toList(),
+                  onChanged: (value) => setDialog(() => selected = value),
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: const Text('Cancel')),
+                  FilledButton(
+                      onPressed: selected == null
+                          ? null
+                          : () async {
+                              await apiClient.updateLeadProject(
+                                  lead.id, selected!);
+                              if (dialogContext.mounted) {
+                                Navigator.pop(dialogContext, true);
+                              }
+                            },
+                      child: const Text('Save'))
+                ],
+              )),
     );
     if (saved == true) setState(() => leads = apiClient.getLeads());
   }
 }
 
 class _LeadCard extends StatelessWidget {
-  const _LeadCard({required this.lead, required this.onFollowUp, required this.onEditProject});
+  const _LeadCard(
+      {required this.lead,
+      required this.onFollowUp,
+      required this.onEditProject});
 
   final Lead lead;
   final VoidCallback onFollowUp;
@@ -163,7 +183,7 @@ class _LeadCard extends StatelessWidget {
               Expanded(
                 child: Text(lead.customerName,
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w900)),
+                        fontSize: 16, fontWeight: FontWeight.w900)),
               ),
               StatusPill(
                   label: lead.projectType == null
@@ -172,41 +192,79 @@ class _LeadCard extends StatelessWidget {
                   color: const Color(0xff0f766e)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               StatusPill(
                   label: enumLabel(leadStatuses, lead.status),
                   color: const Color(0xff2563eb)),
-              StatusPill(label: lead.phone, color: const Color(0xff667085)),
               if (lead.nextFollowUpAt != null)
                 StatusPill(
                     label: shortDate(lead.nextFollowUpAt),
                     color: const Color(0xffb54708)),
             ],
           ),
-          if (lead.email != null && lead.email!.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(lead.email!, style: const TextStyle(color: Color(0xff667085))),
-          ],
-          if (lead.projectName != null) Text('Project: ${lead.projectName}', style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.phone_outlined,
+                  size: 16, color: Color(0xff667085)),
+              const SizedBox(width: 6),
+              Text(lead.phone,
+                  style: const TextStyle(color: Color(0xff667085))),
+              if (lead.projectName != null) ...[
+                const SizedBox(width: 12),
+                const Icon(Icons.apartment_outlined,
+                    size: 16, color: Color(0xff667085)),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    lead.projectName!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => callPhone(context, lead.phone),
+                  icon: const Icon(Icons.call_outlined, size: 17),
+                  label: const Text('Call'),
+                ),
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () => openWhatsApp(context, lead.phone),
+                  icon: const Icon(Icons.chat_outlined, size: 17),
+                  label: const Text('WhatsApp'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onEditProject,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Edit project'),
+                  icon: const Icon(Icons.edit_outlined, size: 17),
+                  label: const Text('Project'),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 7),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: onFollowUp,
-                  icon: const Icon(Icons.note_add_outlined),
+                  icon: const Icon(Icons.note_add_outlined, size: 17),
                   label: const Text('Follow-up'),
                 ),
               ),

@@ -5,6 +5,11 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+dependencies {
+    // Expose OneSignal's native service-extension API to the app module.
+    implementation "com.onesignal:OneSignal:5.8.0"
+}
+
 android {
     namespace = "com.example.real_estate_crm_sales"
     compileSdk = 35
