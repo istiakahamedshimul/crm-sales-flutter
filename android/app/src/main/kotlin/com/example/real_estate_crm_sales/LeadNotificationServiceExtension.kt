@@ -15,6 +15,7 @@ class LeadNotificationServiceExtension : INotificationServiceExtension {
             builder
                 .setOngoing(true)
                 .setAutoCancel(false)
+                .setChannelId(MainActivity.LEAD_CHANNEL_ID)
             builder.notification.flags =
                 builder.notification.flags or
                     Notification.FLAG_INSISTENT or

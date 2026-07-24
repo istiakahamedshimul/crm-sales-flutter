@@ -67,6 +67,6 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         // Versioned because Android notification-channel sounds are immutable after creation.
-        private const val LEAD_CHANNEL_ID = "lead_assignments_tone_v3"
+        const val LEAD_CHANNEL_ID = "lead_assignments_tone_v4"
     }
 }
