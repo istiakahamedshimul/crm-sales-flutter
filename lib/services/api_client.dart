@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/follow_up.dart';
-import 'package:real_estate_crm_sales/models/invoice.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
@@ -78,6 +77,11 @@ class ApiClient {
     return data.map((item) => Customer.fromJson(item)).toList();
   }
 
+  Future<List<Customer>> getBookedCustomers() async {
+    final data = await _getList('/customers/booked');
+    return data.map((item) => Customer.fromJson(item)).toList();
+  }
+
   Future<List<ProjectSubGroup>> getSubGroups() async {
     final data = await _getList('/subgroups');
     return data.map(ProjectSubGroup.fromJson).toList();
@@ -135,14 +139,18 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
-  Future<List<Invoice>> getInvoices() async {
-    final data = await _getList('/invoices');
-    return data.map((item) => Invoice.fromJson(item)).toList();
-  }
-
   Future<List<Payment>> getPayments() async {
     final data = await _getList('/payments');
     return data.map((item) => Payment.fromJson(item)).toList();
+  }
+
+  Future<void> updateLeadProject(int leadId, int projectId) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.apiBaseUrl}/leads/$leadId'),
+      headers: headers,
+      body: jsonEncode({'projectId': projectId}),
+    );
+    _throwIfFailed(response);
   }
 
   Future<CommissionSummary> getCommission() async {
@@ -208,40 +216,16 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
-  Future<void> createInvoice({
-    required int customerId,
-    required double amount,
-    required DateTime dueDate,
-    double discount = 0,
-    double tax = 0,
-  }) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/invoices'),
-      headers: headers,
-      body: jsonEncode({
-        'customerId': customerId,
-        'projectId': null,
-        'salesExecutiveId': null,
-        'dueDate': dueDate.toUtc().toIso8601String(),
-        'amount': amount,
-        'discount': discount,
-        'tax': tax,
-      }),
-    );
-
-    _throwIfFailed(response);
-  }
-
-  Future<void> submitPayment(
-    int invoiceId,
+  Future<void> submitCollection(
+    int customerId,
     double amount,
     String proofUrl,
   ) async {
     final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/payments/manual'),
+      Uri.parse('${AppConfig.apiBaseUrl}/payments/collection'),
       headers: headers,
       body: jsonEncode({
-        'invoiceId': invoiceId,
+        'customerId': customerId,
         'amount': amount,
         'method': 0,
         'proofUrl': proofUrl,

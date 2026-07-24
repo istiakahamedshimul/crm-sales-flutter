@@ -3,7 +3,6 @@ import 'package:real_estate_crm_sales/screens/commission_screen.dart';
 import 'package:real_estate_crm_sales/screens/customers_screen.dart';
 import 'package:real_estate_crm_sales/screens/dashboard_screen.dart';
 import 'package:real_estate_crm_sales/screens/followups_screen.dart';
-import 'package:real_estate_crm_sales/screens/invoices_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
@@ -36,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
       const LeadsScreen(),
       const FollowUpsScreen(),
       const CustomersScreen(),
-      const InvoicesScreen(),
       const PaymentsScreen(),
       const CommissionScreen(),
       const VehicleBookingsScreen(),
@@ -50,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (value) {
-          if (value == 8) {
+          if (value == 7) {
             _logout();
             return;
           }
@@ -74,13 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedIcon: Icon(Icons.contacts_rounded),
               label: 'Customers'),
           NavigationDestination(
-              icon: Icon(Icons.request_quote_outlined),
-              selectedIcon: Icon(Icons.request_quote_rounded),
-              label: 'Invoices'),
-          NavigationDestination(
               icon: Icon(Icons.price_check_outlined),
               selectedIcon: Icon(Icons.price_check_rounded),
-              label: 'Payments'),
+              label: 'Collections'),
           NavigationDestination(
               icon: Icon(Icons.savings_outlined),
               selectedIcon: Icon(Icons.savings_rounded),

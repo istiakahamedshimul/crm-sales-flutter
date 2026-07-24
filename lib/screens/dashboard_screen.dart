@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
-import 'package:real_estate_crm_sales/models/invoice.dart';
+import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final results = await Future.wait([
       apiClient.getProfile(),
       apiClient.getLeads(),
-      apiClient.getInvoices(),
+      apiClient.getBookedCustomers(),
       apiClient.getPayments(),
       apiClient.getCommission(),
     ]);
@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _DashboardData(
       profile: results[0] as Map<String, dynamic>,
       leads: results[1] as List<Lead>,
-      invoices: results[2] as List<Invoice>,
+      customers: results[2] as List<Customer>,
       payments: results[3] as List<Payment>,
       commission: results[4] as CommissionSummary,
     );
@@ -107,11 +107,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       value: item.leads.length.toString(),
                       icon: Icons.assignment_ind_outlined),
                   _MetricTile(
-                      label: 'Invoices',
-                      value: item.invoices.length.toString(),
-                      icon: Icons.receipt_long_outlined),
+                      label: 'Booked Customers',
+                      value: item.customers.length.toString(),
+                      icon: Icons.people_alt_outlined),
                   _MetricTile(
-                      label: 'Pending Payments',
+                      label: 'Pending Collections',
                       value: pendingPayments.toString(),
                       icon: Icons.pending_actions_outlined),
                   _MetricTile(
@@ -125,7 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Hot follow-up queue',
+                    const Text('Follow-up queue',
                         style: TextStyle(
                             fontWeight: FontWeight.w900, fontSize: 17)),
                     const SizedBox(height: 10),
@@ -185,14 +185,14 @@ class _DashboardData {
   const _DashboardData({
     required this.profile,
     required this.leads,
-    required this.invoices,
+    required this.customers,
     required this.payments,
     required this.commission,
   });
 
   final Map<String, dynamic> profile;
   final List<Lead> leads;
-  final List<Invoice> invoices;
+  final List<Customer> customers;
   final List<Payment> payments;
   final CommissionSummary commission;
 }

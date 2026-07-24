@@ -9,13 +9,15 @@ const leadStatuses = [
   'Site Visit',
   'Visited',
   'Negotiation',
-  'Invoice',
+  'Proposal',
   'Booked',
   'Lost',
   'Not Interested',
 ];
 
-const leadPriorities = ['Cold', 'Warm', 'Hot'];
+const projectTypes = [
+  'Apartment', 'Flat', 'Plot', 'Land', 'Commercial Space', 'Shop', 'Office Space' , 'Hospital', 'Hotel', 'Resort'
+];
 const followUpTypes = [
   'WhatsApp',
   'Call',
@@ -28,15 +30,6 @@ const followUpTypes = [
   'Other'
 ];
 const paymentStatuses = ['Pending', 'Approved', 'Rejected'];
-const invoiceStatuses = [
-  'Draft',
-  'Generated',
-  'Sent',
-  'Partial',
-  'Paid',
-  'Cancelled',
-  'Expired'
-];
 const commissionStatuses = ['Pending', 'Approved', 'Rejected', 'Paid', 'Hold'];
 
 String enumLabel(List<String> labels, Object? value) {

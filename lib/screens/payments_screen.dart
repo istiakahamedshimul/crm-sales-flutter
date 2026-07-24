@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:real_estate_crm_sales/models/invoice.dart';
+import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
@@ -59,7 +59,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(payment.invoiceNumber,
+                      Text(payment.collectionNumber,
                           style: const TextStyle(
                               color: Color(0xff667085),
                               fontWeight: FontWeight.w700)),
@@ -109,8 +109,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   final amount = TextEditingController();
   final proof = TextEditingController();
   String? selectedFilePath;
-  late Future<List<Invoice>> invoices = apiClient.getInvoices();
-  int? invoiceId;
+  late Future<List<Customer>> customers = apiClient.getBookedCustomers();
+  int? customerId;
   bool loading = false;
   String error = '';
 
@@ -129,30 +129,29 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           right: 18,
           top: 18,
           bottom: MediaQuery.of(context).viewInsets.bottom + 18),
-      child: FutureBuilder<List<Invoice>>(
-        future: invoices,
+      child: FutureBuilder<List<Customer>>(
+        future: customers,
         builder: (context, snapshot) {
           final data = snapshot.data ?? [];
           return ListView(
             shrinkWrap: true,
             children: [
-              Text('Submit Payment Proof',
+              Text('Submit Collection',
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: 14),
               DropdownButtonFormField<int>(
-                value: invoiceId,
-                decoration: const InputDecoration(labelText: 'Invoice'),
+                value: customerId,
+                decoration: const InputDecoration(labelText: 'Booked customer'),
                 items: [
-                  for (final invoice in data)
+                  for (final customer in data)
                     DropdownMenuItem(
-                        value: invoice.id,
-                        child: Text(
-                            '${invoice.invoiceNumber} - ${money(invoice.finalAmount)}')),
+                        value: customer.id,
+                        child: Text('${customer.name} - ${customer.phone}')),
                 ],
-                onChanged: (value) => setState(() => invoiceId = value),
+                onChanged: (value) => setState(() => customerId = value),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -191,8 +190,13 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   }
 
   Future<void> submit() async {
-    if (invoiceId == null) {
-      setState(() => error = 'Select an invoice first.');
+    if (customerId == null) {
+      setState(() => error = 'Select a booked customer first.');
+      return;
+    }
+    final parsedAmount = double.tryParse(amount.text);
+    if (parsedAmount == null || parsedAmount <= 0) {
+      setState(() => error = 'Collection amount must be greater than zero.');
       return;
     }
     setState(() {
@@ -208,8 +212,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         );
       }
 
-      await apiClient.submitPayment(
-          invoiceId!, double.parse(amount.text), proofUrl);
+      if (proofUrl.isEmpty) throw Exception('Choose a receipt first.');
+      await apiClient.submitCollection(customerId!, parsedAmount, proofUrl);
       if (mounted) Navigator.pop(context, true);
     } catch (exception) {
       setState(() => error = exception.toString());

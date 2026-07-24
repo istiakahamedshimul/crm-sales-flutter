@@ -149,7 +149,7 @@ class _LoginHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Assigned leads, follow-up proof, collections, invoices, and commission in one focused app.',
+            'Assigned leads, follow-up proof, collections, and commission in one focused app.',
             style: TextStyle(
                 color: Color(0xffdbe7e6),
                 height: 1.5,

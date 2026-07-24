@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
+import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
@@ -16,6 +17,7 @@ class LeadsScreen extends StatefulWidget {
 
 class _LeadsScreenState extends State<LeadsScreen> {
   late Future<List<Lead>> leads = apiClient.getLeads();
+  int? selectedProjectType;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,9 @@ class _LeadsScreenState extends State<LeadsScreen> {
           }
 
           final data = snapshot.data ?? [];
+          final filteredData = selectedProjectType == null
+              ? data
+              : data.where((lead) => lead.projectType == selectedProjectType).toList();
           if (data.isEmpty) {
             return const EmptyState(
                 text:
@@ -60,8 +65,35 @@ class _LeadsScreenState extends State<LeadsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              for (final lead in data) ...[
-                _LeadCard(lead: lead, onFollowUp: () => openFollowUp(lead)),
+              SalesCard(
+                child: DropdownButtonFormField<int?>(
+                  value: selectedProjectType,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Filter by property type',
+                    prefixIcon: Icon(Icons.filter_list),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('All property types'),
+                    ),
+                    for (var i = 0; i < projectTypes.length; i++)
+                      DropdownMenuItem<int?>(
+                        value: i,
+                        child: Text(projectTypes[i]),
+                      ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => selectedProjectType = value),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (filteredData.isEmpty)
+                const EmptyState(text: 'No leads match this property type.'),
+              for (final lead in filteredData) ...[
+                _LeadCard(lead: lead, onFollowUp: () => openFollowUp(lead),
+                    onEditProject: () => editProject(lead)),
                 const SizedBox(height: 12),
               ],
             ],
@@ -83,13 +115,42 @@ class _LeadsScreenState extends State<LeadsScreen> {
       setState(() => leads = apiClient.getLeads());
     }
   }
+
+  Future<void> editProject(Lead lead) async {
+    final projects = await apiClient.getProjects();
+    if (!mounted) return;
+    var selected = lead.projectId;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(builder: (context, setDialog) =>
+        AlertDialog(
+          title: Text('Edit project: ${lead.customerName}'),
+          content: DropdownButtonFormField<int>(
+            isExpanded: true,
+            value: selected,
+            decoration: const InputDecoration(labelText: 'Project'),
+            items: projects.map((CrmProject p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
+            onChanged: (value) => setDialog(() => selected = value),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(onPressed: selected == null ? null : () async {
+              await apiClient.updateLeadProject(lead.id, selected!);
+              if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+            }, child: const Text('Save'))
+          ],
+        )),
+    );
+    if (saved == true) setState(() => leads = apiClient.getLeads());
+  }
 }
 
 class _LeadCard extends StatelessWidget {
-  const _LeadCard({required this.lead, required this.onFollowUp});
+  const _LeadCard({required this.lead, required this.onFollowUp, required this.onEditProject});
 
   final Lead lead;
   final VoidCallback onFollowUp;
+  final VoidCallback onEditProject;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +165,11 @@ class _LeadCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.w900)),
               ),
-              StatusPill(label: enumLabel(leadPriorities, lead.priority)),
+              StatusPill(
+                  label: lead.projectType == null
+                      ? 'None'
+                      : enumLabel(projectTypes, lead.projectType),
+                  color: const Color(0xff0f766e)),
             ],
           ),
           const SizedBox(height: 10),
@@ -126,14 +191,15 @@ class _LeadCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(lead.email!, style: const TextStyle(color: Color(0xff667085))),
           ],
+          if (lead.projectName != null) Text('Project: ${lead.projectName}', style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.call_outlined),
-                  label: const Text('Call'),
+                  onPressed: onEditProject,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit project'),
                 ),
               ),
               const SizedBox(width: 10),
