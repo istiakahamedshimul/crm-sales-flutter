@@ -30,7 +30,8 @@ class _CommissionScreenState extends State<CommissionScreen> {
 
   void _onAppReload() {
     if (mounted) {
-      debugPrint('[CommissionScreen] Live auto-reloading commission summary...');
+      debugPrint(
+          '[CommissionScreen] Live auto-reloading commission summary...');
       setState(() => commission = apiClient.getCommission());
     }
   }
@@ -47,7 +48,8 @@ class _CommissionScreenState extends State<CommissionScreen> {
       child: FutureBuilder<CommissionSummary>(
         future: commission,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return const Center(
               heightFactor: 6,
               child: CircularProgressIndicator(),
@@ -69,7 +71,8 @@ class _CommissionScreenState extends State<CommissionScreen> {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => setState(() => commission = apiClient.getCommission()),
+                    onPressed: () =>
+                        setState(() => commission = apiClient.getCommission()),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -140,26 +143,6 @@ class _CommissionScreenState extends State<CommissionScreen> {
                         fontWeight: FontWeight.w900,
                         letterSpacing: -1,
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _WalletMini(
-                            label: 'Pending Balance',
-                            value: money(data.pending),
-                            textColor: const Color(0xfffbbf24), // Amber
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _WalletMini(
-                            label: 'Paid to Wallet',
-                            value: money(data.paid),
-                            textColor: const Color(0xff2dd4bf), // Teal/Green
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -237,7 +220,7 @@ class _CommissionScreenState extends State<CommissionScreen> {
                             ),
                           ),
                           StatusPill(
-                            label: enumLabel(commissionStatuses, row.status),
+                            label: row.status == 2 ? 'Reversed' : 'Commission',
                           ),
                         ],
                       ),
@@ -247,52 +230,6 @@ class _CommissionScreenState extends State<CommissionScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _WalletMini extends StatelessWidget {
-  const _WalletMini({
-    required this.label,
-    required this.value,
-    required this.textColor,
-  });
-
-  final String label;
-  final String value;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xffcbd5e1),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-            ),
-          ),
-        ],
       ),
     );
   }

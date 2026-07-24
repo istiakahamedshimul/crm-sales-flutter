@@ -166,15 +166,15 @@ class _ActiveLeadsTabContentState extends State<ActiveLeadsTabContent> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xffdbeafe)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, color: Color(0xff2563eb), size: 20),
-                    const SizedBox(width: 10),
+                    Icon(Icons.info_outline_rounded, color: Color(0xff2563eb), size: 20),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Follow up on your active leads. Tap direct shortcuts to call or WhatsApp.',
                         style: TextStyle(
-                          color: const Color(0xff1e3a8a),
+                          color: Color(0xff1e3a8a),
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
