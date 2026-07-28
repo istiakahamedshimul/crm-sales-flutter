@@ -4,7 +4,6 @@ class FollowUp {
     required this.lead,
     required this.type,
     required this.summary,
-    this.customerResponse,
     this.nextFollowUpAt,
   });
 
@@ -12,7 +11,6 @@ class FollowUp {
   final String lead;
   final Object? type;
   final String summary;
-  final String? customerResponse;
   final String? nextFollowUpAt;
 
   factory FollowUp.fromJson(Map<String, dynamic> json) {
@@ -21,7 +19,6 @@ class FollowUp {
       lead: json['lead'] as String? ?? '',
       type: json['type'],
       summary: json['summary'] as String? ?? '',
-      customerResponse: json['customerResponse'] as String?,
       nextFollowUpAt: json['nextFollowUpAt'] as String?,
     );
   }

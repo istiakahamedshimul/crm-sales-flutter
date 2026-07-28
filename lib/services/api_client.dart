@@ -184,7 +184,6 @@ class ApiClient {
     required int leadId,
     required int type,
     required String summary,
-    required String customerResponse,
     DateTime? nextFollowUpAt,
     int? newLeadStatus,
     String? proofUrl,
@@ -198,7 +197,6 @@ class ApiClient {
         'customerId': null,
         'type': type,
         'summary': summary,
-        'customerResponse': customerResponse,
         'nextFollowUpAt':
             (nextFollowUpAt ?? DateTime.now().add(const Duration(days: 1)))
                 .toUtc()

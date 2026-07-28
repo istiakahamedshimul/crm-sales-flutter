@@ -8,6 +8,6 @@ void main() {
 
     expect(find.text('Sales Workspace'), findsOneWidget);
     expect(find.text('sales@crm.local'), findsOneWidget);
-    expect(find.text('Enter Workspace'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
   });
 }

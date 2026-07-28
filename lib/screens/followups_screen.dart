@@ -161,37 +161,6 @@ class _FollowUpsScreenState extends State<FollowUpsScreen> {
                         height: 1.4,
                       ),
                     ),
-                    if (item.customerResponse != null && item.customerResponse!.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      const Text(
-                        'CLIENT RESPONSE',
-                        style: TextStyle(
-                          color: Color(0xff94a3b8),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xfff8fafc),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xfff1f5f9)),
-                        ),
-                        child: Text(
-                          '"${item.customerResponse!}"',
-                          style: const TextStyle(
-                            color: Color(0xff475569),
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                     const Divider(height: 24, color: Color(0xfff1f5f9)),
                     Row(
                       children: [

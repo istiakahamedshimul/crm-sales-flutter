@@ -10,6 +10,7 @@ import 'package:real_estate_crm_sales/shared/contact_actions.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class LeadsScreen extends StatelessWidget {
   const LeadsScreen({super.key});
@@ -515,18 +516,28 @@ class _FollowUpSheet extends StatefulWidget {
 
 class _FollowUpSheetState extends State<_FollowUpSheet> {
   final summary = TextEditingController();
-  final response = TextEditingController();
   final proof = TextEditingController();
+  final SpeechToText speech = SpeechToText();
   String? selectedFilePath;
+  String voiceLanguage = 'bn_BD';
+  String textBeforeListening = '';
+  bool speechAvailable = false;
+  bool listening = false;
   int type = 0;
   int nextStatus = 4;
   bool loading = false;
   String error = '';
 
   @override
+  void initState() {
+    super.initState();
+    initializeSpeech();
+  }
+
+  @override
   void dispose() {
+    speech.stop();
     summary.dispose();
-    response.dispose();
     proof.dispose();
     super.dispose();
   }
@@ -583,16 +594,45 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
             onChanged: (value) => setState(() => type = value ?? 0),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: summary,
-            maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Summary / Discussion Detail'),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Write manually or dictate the summary',
+                  style: TextStyle(color: Color(0xff64748b), fontSize: 12),
+                ),
+              ),
+              DropdownButton<String>(
+                value: voiceLanguage,
+                items: const [
+                  DropdownMenuItem(value: 'bn_BD', child: Text('বাংলা')),
+                  DropdownMenuItem(value: 'en_US', child: Text('English')),
+                ],
+                onChanged: listening
+                    ? null
+                    : (value) => setState(() => voiceLanguage = value ?? 'bn_BD'),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: response,
-            maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Customer Response'),
+            controller: summary,
+            minLines: 3,
+            maxLines: 6,
+            decoration: InputDecoration(
+              labelText: 'Summary / Discussion Detail',
+              hintText: voiceLanguage == 'bn_BD'
+                  ? 'টাইপ করুন অথবা মাইক্রোফোনে বলুন'
+                  : 'Type or tap the microphone to dictate',
+              suffixIcon: IconButton(
+                tooltip: listening ? 'Stop dictation' : 'Start voice dictation',
+                onPressed: speechAvailable ? toggleListening : initializeSpeech,
+                icon: Icon(
+                  listening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                  color: listening ? const Color(0xffdc2626) : const Color(0xff0f766e),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -663,7 +703,6 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
         leadId: widget.lead.id,
         type: type,
         summary: summary.text.trim(),
-        customerResponse: response.text.trim(),
         newLeadStatus: nextStatus,
         proofUrl: proofUrl,
       );
@@ -673,6 +712,61 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  Future<void> initializeSpeech() async {
+    final available = await speech.initialize(
+      onStatus: (status) {
+        if (!mounted) return;
+        setState(() => listening = status == 'listening');
+      },
+      onError: (speechError) {
+        if (!mounted) return;
+        setState(() {
+          listening = false;
+          error = 'Voice input error: ${speechError.errorMsg}';
+        });
+      },
+    );
+    if (!mounted) return;
+    setState(() {
+      speechAvailable = available;
+      if (!available) error = 'Speech recognition is not available on this device.';
+    });
+  }
+
+  Future<void> toggleListening() async {
+    if (speech.isListening) {
+      await speech.stop();
+      if (mounted) setState(() => listening = false);
+      return;
+    }
+
+    textBeforeListening = summary.text.trim();
+    setState(() {
+      error = '';
+      listening = true;
+    });
+    await speech.listen(
+      listenOptions: SpeechListenOptions(
+        localeId: voiceLanguage,
+        listenFor: const Duration(minutes: 2),
+        pauseFor: const Duration(seconds: 5),
+        listenMode: ListenMode.dictation,
+        partialResults: true,
+        cancelOnError: true,
+      ),
+      onResult: (result) {
+        final spoken = result.recognizedWords.trim();
+        final combined = [textBeforeListening, spoken]
+            .where((part) => part.isNotEmpty)
+            .join(textBeforeListening.isEmpty ? '' : ' ');
+        summary.value = TextEditingValue(
+          text: combined,
+          selection: TextSelection.collapsed(offset: combined.length),
+        );
+      },
+    );
   }
 
   Future<void> pickProof() async {
