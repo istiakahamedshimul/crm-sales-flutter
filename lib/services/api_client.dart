@@ -1,29 +1,34 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/follow_up.dart';
-import 'package:real_estate_crm_sales/models/invoice.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
+import 'package:real_estate_crm_sales/models/project.dart';
+import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 
 class ApiClient {
   String token = '';
+  int? userId;
 
   Future<void> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token') ?? '';
+    userId = prefs.getInt('userId');
     debugPrint('[ApiClient] session loaded, token: ${token.isNotEmpty ? 'present' : 'empty'}');
   }
 
   Future<void> clearSession() async {
     token = '';
+    userId = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('userId');
   }
 
   Map<String, String> get headers => {
@@ -41,8 +46,10 @@ class ApiClient {
     _throwIfFailed(response);
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     token = data['token'] as String;
+    userId = data['userId'] as int;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+    await prefs.setInt('userId', userId!);
   }
 
   Future<Map<String, dynamic>> getProfile() async {
@@ -69,14 +76,80 @@ class ApiClient {
     return data.map((item) => Customer.fromJson(item)).toList();
   }
 
-  Future<List<Invoice>> getInvoices() async {
-    final data = await _getList('/invoices');
-    return data.map((item) => Invoice.fromJson(item)).toList();
+  Future<List<Customer>> getBookedCustomers() async {
+    final data = await _getList('/customers/booked');
+    return data.map((item) => Customer.fromJson(item)).toList();
+  }
+
+  Future<List<ProjectSubGroup>> getSubGroups() async {
+    final data = await _getList('/subgroups');
+    return data.map(ProjectSubGroup.fromJson).toList();
+  }
+
+  Future<List<CrmProject>> getProjects() async {
+    final data = await _getList('/projects');
+    return data.map(CrmProject.fromJson).toList();
+  }
+
+  Future<List<VehicleBooking>> getVehicleBookings() async {
+    final data = await _getList('/vehicle-bookings');
+    return data.map(VehicleBooking.fromJson).toList();
+  }
+
+  Future<void> createVehicleBooking({
+    required int customerId,
+    required int projectId,
+    required DateTime visitDate,
+    required TimeOfDay visitTime,
+    required int personCount,
+    required String pickupPlace,
+    required String purpose,
+    String? additionalInformation,
+  }) async {
+    final now = DateTime.now();
+    final response = await http.post(
+      Uri.parse('${AppConfig.apiBaseUrl}/vehicle-bookings'),
+      headers: headers,
+      body: jsonEncode({
+        'customerId': customerId,
+        'projectId': projectId,
+        'visitDate': _dateOnly(visitDate),
+        'visitTime': '${visitTime.hour.toString().padLeft(2, '0')}:${visitTime.minute.toString().padLeft(2, '0')}',
+        'personCount': personCount,
+        'pickupPlace': pickupPlace,
+        'purpose': purpose,
+        'additionalInformation': additionalInformation,
+        'clientLocalDateTime': now.toIso8601String(),
+        'timezoneOffsetMinutes': now.timeZoneOffset.inMinutes,
+      }),
+    );
+    _throwIfFailed(response);
+  }
+
+  String _dateOnly(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+
+  Future<void> updateCustomerProject(int customerId, int? projectId) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.apiBaseUrl}/customers/$customerId/project'),
+      headers: headers,
+      body: jsonEncode({'projectId': projectId}),
+    );
+    _throwIfFailed(response);
   }
 
   Future<List<Payment>> getPayments() async {
     final data = await _getList('/payments');
     return data.map((item) => Payment.fromJson(item)).toList();
+  }
+
+  Future<void> updateLeadProject(int leadId, int projectId) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.apiBaseUrl}/leads/$leadId'),
+      headers: headers,
+      body: jsonEncode({'projectId': projectId}),
+    );
+    _throwIfFailed(response);
   }
 
   Future<CommissionSummary> getCommission() async {
@@ -142,41 +215,16 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
-  Future<void> createInvoice({
-    required int customerId,
-    required double amount,
-    required DateTime dueDate,
-    double discount = 0,
-    double tax = 0,
-  }) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/invoices'),
-      headers: headers,
-      body: jsonEncode({
-        'customerId': customerId,
-        'projectId': null,
-        'unitId': null,
-        'salesExecutiveId': null,
-        'dueDate': dueDate.toUtc().toIso8601String(),
-        'amount': amount,
-        'discount': discount,
-        'tax': tax,
-      }),
-    );
-
-    _throwIfFailed(response);
-  }
-
-  Future<void> submitPayment(
-    int invoiceId,
+  Future<void> submitCollection(
+    int customerId,
     double amount,
     String proofUrl,
   ) async {
     final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/payments/manual'),
+      Uri.parse('${AppConfig.apiBaseUrl}/payments/collection'),
       headers: headers,
       body: jsonEncode({
-        'invoiceId': invoiceId,
+        'customerId': customerId,
         'amount': amount,
         'method': 0,
         'proofUrl': proofUrl,
