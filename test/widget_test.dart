@@ -4,7 +4,7 @@ import 'package:real_estate_crm_sales/main.dart';
 
 void main() {
   testWidgets('shows sales login screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const SalesCrmApp());
+    await tester.pumpWidget(const SalesCrmApp(isLoggedIn: false));
 
     expect(find.text('Sales Workspace'), findsOneWidget);
     expect(find.text('sales@crm.local'), findsOneWidget);

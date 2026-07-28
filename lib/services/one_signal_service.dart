@@ -30,6 +30,13 @@ class OneSignalService {
         _deliverPendingNavigation();
       }
     });
+    OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+      if (event.notification.additionalData?['screen'] == 'assigned_leads') {
+        // Do not start an insistent notification while the seller is
+        // already actively using the app.
+        event.preventDefault();
+      }
+    });
     _handleSubscriptionId(OneSignal.User.pushSubscription.id);
 
     // The navigator is attached by MaterialApp after initialization.

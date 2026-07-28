@@ -31,15 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: ConstrainedBox(
-                constraints:
-                    BoxConstraints(minHeight: constraints.maxHeight - 40),
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
+                ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const _LoginHeader(),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 24),
                     _LoginForm(
                       email: email,
                       password: password,
@@ -60,24 +62,31 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> login() async {
+    if (email.text.trim().isEmpty || password.text.trim().isEmpty) {
+      setState(() => error = 'Please enter email and password.');
+      return;
+    }
+
     setState(() {
       loading = true;
       error = '';
     });
 
     try {
-      await apiClient.login(email.text, password.text);
+      await apiClient.login(email.text.trim(), password.text.trim());
       await oneSignalService.login('crm-user-${apiClient.userId}');
       if (!mounted) return;
       final initialIndex =
           oneSignalService.consumeAssignedLeadsNavigation() ? 1 : 0;
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-            builder: (_) => HomeScreen(initialIndex: initialIndex)),
+          builder: (_) => HomeScreen(initialIndex: initialIndex),
+        ),
       );
     } catch (exception) {
       setState(
-          () => error = 'Login failed. Start backend and check credentials.');
+        () => error = exception.toString().replaceFirst('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -90,19 +99,19 @@ class _LoginHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xff0f766e), Color(0xff111827)],
+          colors: [Color(0xff0f766e), Color(0xff0f172a)],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xff0f766e).withOpacity(0.24),
-            blurRadius: 30,
-            offset: const Offset(0, 18),
+            color: const Color(0xff0f766e).withOpacity(0.2),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -112,56 +121,64 @@ class _LoginHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white.withOpacity(0.22)),
+                  color: Colors.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
                 ),
-                child: const Icon(Icons.apartment_rounded,
-                    color: Colors.white, size: 30),
+                child: const Icon(
+                  Icons.apartment_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Text(
-                  'Field Sales',
+                  'Sales Connect',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w800),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 34),
-          Text(
-            'Sales Workspace',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  height: 1.05,
-                ),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 28),
           const Text(
-            'Assigned leads, follow-up proof, collections, invoices, and commission in one focused app.',
+            'Sales Workspace',
             style: TextStyle(
-                color: Color(0xffdbe7e6),
-                height: 1.5,
-                fontWeight: FontWeight.w600),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 28,
+              height: 1.1,
+            ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 8),
+          const Text(
+            'Manage assigned leads, upload follow-up logs, submit collection receipts, and track your wallet.',
+            style: TextStyle(
+              color: Color(0xffcbd5e1),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
           const Row(
             children: [
-              Expanded(child: _HeroStat(value: '24/7', label: 'Access')),
-              SizedBox(width: 10),
-              Expanded(child: _HeroStat(value: 'MVP', label: 'Ready')),
-              SizedBox(width: 10),
+              Expanded(child: _HeroStat(value: 'Live', label: 'Sync')),
+              SizedBox(width: 8),
+              Expanded(child: _HeroStat(value: 'OneSignal', label: 'Alerts')),
+              SizedBox(width: 8),
               Expanded(child: _HeroStat(value: 'JWT', label: 'Secure')),
             ],
           ),
@@ -180,25 +197,34 @@ class _HeroStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                  color: Color(0xffcbd5e1),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xff94a3b8),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -223,61 +249,76 @@ class _LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xffdfe6eb)),
+        border: Border.all(color: const Color(0xfff1f5f9), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
+            color: const Color(0xff0f172a).withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Welcome back',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          const Text(
+            'Welcome back',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xff0f172a),
+            ),
+          ),
           const SizedBox(height: 4),
-          const Text('Sign in to continue your daily sales work.',
-              style: TextStyle(
-                  color: Color(0xff667085), fontWeight: FontWeight.w600)),
-          const SizedBox(height: 18),
+          const Text(
+            'Sign in to sync your active sales pipeline.',
+            style: TextStyle(
+              color: Color(0xff64748b),
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 20),
           TextField(
             controller: email,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
-              labelText: 'Email address',
-              prefixIcon: Icon(Icons.alternate_email_rounded),
+              labelText: 'Email Address',
+              prefixIcon: Icon(Icons.alternate_email_rounded, size: 20),
             ),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: password,
             obscureText: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => loading ? null : onSubmit(),
             decoration: const InputDecoration(
               labelText: 'Password',
-              prefixIcon: Icon(Icons.password_rounded),
+              prefixIcon: Icon(Icons.lock_outline_rounded, size: 20),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           FilledButton(
             onPressed: loading ? null : onSubmit,
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(54),
+              minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(loading ? 'Signing in...' : 'Enter Workspace'),
+                Text(loading ? 'Signing in...' : 'Sign In'),
                 if (!loading) ...[
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, size: 20),
+                  const Icon(Icons.arrow_forward_rounded, size: 18),
                 ],
               ],
             ),
@@ -285,10 +326,29 @@ class _LoginForm extends StatelessWidget {
           if (error.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: Text(
-                error,
-                style: const TextStyle(
-                    color: Color(0xffb42318), fontWeight: FontWeight.w800),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xfffef2f2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xfffee2e2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline_rounded, color: Color(0xffef4444), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        error,
+                        style: const TextStyle(
+                          color: Color(0xffb91c1c),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
@@ -305,11 +365,16 @@ class _TrustStrip extends StatelessWidget {
     return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.verified_user_outlined, size: 18, color: Color(0xff667085)),
-        SizedBox(width: 8),
-        Text('Admin-assigned leads only',
-            style: TextStyle(
-                color: Color(0xff667085), fontWeight: FontWeight.w800)),
+        Icon(Icons.shield_outlined, size: 16, color: Color(0xff64748b)),
+        SizedBox(width: 6),
+        Text(
+          'Secured Workspace Client',
+          style: TextStyle(
+            color: Color(0xff64748b),
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }

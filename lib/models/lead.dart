@@ -4,10 +4,12 @@ class Lead {
     required this.customerName,
     required this.phone,
     required this.status,
-    required this.priority,
     this.email,
     this.assignedToName,
     this.nextFollowUpAt,
+    this.projectId,
+    this.projectName,
+    this.projectType,
   });
 
   final int id;
@@ -15,9 +17,11 @@ class Lead {
   final String phone;
   final String? email;
   final Object? status;
-  final Object? priority;
   final String? assignedToName;
   final String? nextFollowUpAt;
+  final int? projectId;
+  final String? projectName;
+  final Object? projectType;
 
   factory Lead.fromJson(Map<String, dynamic> json) {
     return Lead(
@@ -26,9 +30,11 @@ class Lead {
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String?,
       status: json['status'],
-      priority: json['priority'],
       assignedToName: json['assignedToName'] as String?,
       nextFollowUpAt: json['nextFollowUpAt'] as String?,
+      projectId: json['projectId'] as int?,
+      projectName: json['projectName'] as String?,
+      projectType: json['projectType'],
     );
   }
 }
