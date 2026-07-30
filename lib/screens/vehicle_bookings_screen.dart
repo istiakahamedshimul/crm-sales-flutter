@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
@@ -43,7 +44,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return ScreenFrame(
-      title: 'Customer Visits',
+      title: 'Visits',
       subtitle: 'TRANSPORT REQUESTS',
       action: IconButton.filled(
         onPressed: _openForm,
@@ -142,7 +143,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Customer Transport Status',
+                  'Pipeline Visit Status',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -309,7 +310,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
     var date = DateTime(now.year, now.month, now.day).add(Duration(days: now.hour >= 19 ? 2 : 1));
     var time = const TimeOfDay(hour: 10, minute: 0);
     String purpose = 'Site Visit';
-    int? customerId, projectId;
+    int? leadId, projectId;
     String? error;
     bool saving = false;
 
@@ -319,10 +320,10 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
 
     try {
       final results = await Future.wait([
-        apiClient.getCustomers(),
+        apiClient.getLeads(),
         apiClient.getProjects(),
       ]);
-      final customers = results[0] as List<dynamic>;
+      final leads = results[0] as List<Lead>;
       final projects = results[1] as List<dynamic>;
       if (!mounted) return;
 
@@ -353,7 +354,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Request Customer Visit',
+                    'Request Visit',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: const Color(0xff0f172a),
@@ -367,19 +368,24 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
                   DropdownButtonFormField<int>(
                     isExpanded: true,
                     decoration: const InputDecoration(
-                      labelText: 'Select Customer',
+                      labelText: 'Select Pipeline Lead',
                       prefixIcon: Icon(Icons.person_outline, size: 20),
                     ),
-                    items: customers
+                    items: leads
                         .map((c) => DropdownMenuItem<int>(
-                              value: c.id as int,
-                              child: Text('${c.name} (${c.phone})', overflow: TextOverflow.ellipsis),
+                              value: c.id,
+                              child: Text('${c.customerName} (${c.phone})', overflow: TextOverflow.ellipsis),
                             ))
                         .toList(),
-                    onChanged: (v) => setSheet(() => customerId = v),
+                    onChanged: (v) => setSheet(() {
+                      leadId = v;
+                      final lead = leads.firstWhere((item) => item.id == v);
+                      projectId = lead.projectId;
+                    }),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
+                    value: projectId,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Select Target Project',
@@ -495,7 +501,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
                         ? null
                         : () async {
                             final count = int.tryParse(persons.text);
-                            if (customerId == null ||
+                            if (leadId == null ||
                                 projectId == null ||
                                 count == null ||
                                 count < 1 ||
@@ -509,7 +515,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
                             });
                             try {
                               await apiClient.createVehicleBooking(
-                                customerId: customerId!,
+                                leadId: leadId!,
                                 projectId: projectId!,
                                 visitDate: date,
                                 visitTime: time,

@@ -97,7 +97,7 @@ class ApiClient {
   }
 
   Future<void> createVehicleBooking({
-    required int customerId,
+    required int leadId,
     required int projectId,
     required DateTime visitDate,
     required TimeOfDay visitTime,
@@ -111,7 +111,7 @@ class ApiClient {
       Uri.parse('${AppConfig.apiBaseUrl}/vehicle-bookings'),
       headers: headers,
       body: jsonEncode({
-        'customerId': customerId,
+        'leadId': leadId,
         'projectId': projectId,
         'visitDate': _dateOnly(visitDate),
         'visitTime': '${visitTime.hour.toString().padLeft(2, '0')}:${visitTime.minute.toString().padLeft(2, '0')}',
