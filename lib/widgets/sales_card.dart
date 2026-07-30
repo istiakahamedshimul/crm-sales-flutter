@@ -108,18 +108,28 @@ class WhatsAppIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final themeColor = color ?? const Color(0xff22c55e);
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color ?? const Color(0xff22c55e), // WhatsApp green
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.phone_rounded,
-        size: size * 0.6,
-        color: Colors.white,
+      child: Stack(
+        children: [
+          Icon(
+            Icons.chat_bubble_rounded,
+            size: size,
+            color: themeColor,
+          ),
+          Positioned.fill(
+            child: Align(
+              alignment: const Alignment(0.1, -0.15), // Offset slightly to center inside the bubble body
+              child: Icon(
+                Icons.phone_rounded,
+                size: size * 0.45,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

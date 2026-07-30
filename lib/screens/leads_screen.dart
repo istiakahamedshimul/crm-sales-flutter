@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
@@ -523,6 +525,9 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
   String textBeforeListening = '';
   bool speechAvailable = false;
   bool listening = false;
+  bool dictationRequested = false;
+  bool speechStarting = false;
+  Timer? speechRestartTimer;
   int type = 0;
   int nextStatus = 4;
   bool loading = false;
@@ -536,6 +541,8 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
 
   @override
   void dispose() {
+    dictationRequested = false;
+    speechRestartTimer?.cancel();
     speech.stop();
     summary.dispose();
     proof.dispose();
@@ -608,7 +615,7 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
                   DropdownMenuItem(value: 'bn_BD', child: Text('বাংলা')),
                   DropdownMenuItem(value: 'en_US', child: Text('English')),
                 ],
-                onChanged: listening
+                onChanged: dictationRequested
                     ? null
                     : (value) => setState(() => voiceLanguage = value ?? 'bn_BD'),
               ),
@@ -625,11 +632,11 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
                   ? 'টাইপ করুন অথবা মাইক্রোফোনে বলুন'
                   : 'Type or tap the microphone to dictate',
               suffixIcon: IconButton(
-                tooltip: listening ? 'Stop dictation' : 'Start voice dictation',
+                tooltip: dictationRequested ? 'Stop dictation' : 'Start voice dictation',
                 onPressed: speechAvailable ? toggleListening : initializeSpeech,
                 icon: Icon(
-                  listening ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                  color: listening ? const Color(0xffdc2626) : const Color(0xff0f766e),
+                  dictationRequested ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                  color: dictationRequested ? const Color(0xffdc2626) : const Color(0xff0f766e),
                 ),
               ),
             ),
@@ -718,14 +725,37 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
     final available = await speech.initialize(
       onStatus: (status) {
         if (!mounted) return;
-        setState(() => listening = status == 'listening');
+        final isActivelyListening = status == 'listening';
+        setState(() => listening = isActivelyListening);
+        if (dictationRequested &&
+            !isActivelyListening &&
+            (status == 'done' || status == 'notListening')) {
+          scheduleSpeechRestart();
+        }
       },
       onError: (speechError) {
         if (!mounted) return;
-        setState(() {
-          listening = false;
-          error = 'Voice input error: ${speechError.errorMsg}';
-        });
+        setState(() => listening = false);
+        if (!dictationRequested) return;
+
+        final fatalError = {
+          'error_permission',
+          'error_language_not_supported',
+          'error_language_unavailable',
+          'error_not_available',
+        }.contains(speechError.errorMsg);
+        if (fatalError) {
+          setState(() {
+            dictationRequested = false;
+            error = 'Voice input error: ${speechError.errorMsg}';
+          });
+        } else {
+          final quickRestart = speechError.errorMsg == 'error_no_match' ||
+              speechError.errorMsg == 'error_speech_timeout';
+          scheduleSpeechRestart(
+            delay: Duration(milliseconds: quickRestart ? 180 : 750),
+          );
+        }
       },
     );
     if (!mounted) return;
@@ -736,22 +766,45 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
   }
 
   Future<void> toggleListening() async {
-    if (speech.isListening) {
+    if (dictationRequested) {
+      dictationRequested = false;
+      speechRestartTimer?.cancel();
       await speech.stop();
-      if (mounted) setState(() => listening = false);
+      if (mounted) {
+        setState(() {
+          listening = false;
+          speechStarting = false;
+        });
+      }
       return;
     }
 
-    textBeforeListening = summary.text.trim();
     setState(() {
       error = '';
-      listening = true;
+      dictationRequested = true;
     });
+    await startSpeechChunk();
+  }
+
+  Future<void> startSpeechChunk() async {
+    if (!mounted ||
+        !dictationRequested ||
+        !speechAvailable ||
+        speechStarting ||
+        speech.isListening) {
+      return;
+    }
+
+    speechRestartTimer?.cancel();
+    speechStarting = true;
+    textBeforeListening = summary.text.trim();
+    if (mounted) setState(() {});
+
     await speech.listen(
       listenOptions: SpeechListenOptions(
         localeId: voiceLanguage,
-        listenFor: const Duration(minutes: 2),
-        pauseFor: const Duration(seconds: 5),
+        listenFor: const Duration(seconds: 55),
+        pauseFor: const Duration(seconds: 20),
         listenMode: ListenMode.dictation,
         partialResults: true,
         cancelOnError: true,
@@ -765,8 +818,21 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
           text: combined,
           selection: TextSelection.collapsed(offset: combined.length),
         );
+        if (result.finalResult) textBeforeListening = combined;
       },
     );
+    speechStarting = false;
+    if (mounted) setState(() {});
+  }
+
+  void scheduleSpeechRestart({
+    Duration delay = const Duration(milliseconds: 180),
+  }) {
+    if (!dictationRequested || speechStarting) return;
+    speechRestartTimer?.cancel();
+    speechRestartTimer = Timer(delay, () {
+      if (mounted && dictationRequested) startSpeechChunk();
+    });
   }
 
   Future<void> pickProof() async {

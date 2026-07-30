@@ -143,8 +143,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           final item = snapshot.data!;
-          final pendingPayments =
-              item.payments.where((payment) => payment.status == 0).length;
+          final totalCollection = item.payments.fold<num>(
+            0,
+            (total, payment) => total + payment.amount,
+          );
 
           final String userName = item.profile['fullName']?.toString() ?? 'Sales Executive';
           final String userEmail = item.profile['email']?.toString() ?? 'sales@crm.local';
@@ -245,15 +247,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     tileColor: const Color(0xff0f766e),
                   ),
                   _MetricTile(
-                    label: 'Pending Pay',
-                    value: pendingPayments.toString(),
-                    icon: Icons.hourglass_empty_rounded,
+                    label: 'Total Collection',
+                    value: money(totalCollection),
+                    icon: Icons.payments_rounded,
                     tileColor: const Color(0xffd97706),
                   ),
                   _MetricTile(
-                    label: 'Wallet Bal',
-                    value: money(item.commission.pending),
-                    icon: Icons.wallet_rounded,
+                    label: 'Commissions',
+                    value: money(item.commission.totalEarned),
+                    icon: Icons.workspace_premium_rounded,
                     tileColor: const Color(0xff7c3aed),
                   ),
                 ],
