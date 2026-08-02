@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/screens/payments_screen.dart';
-import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/widgets/empty_state.dart';
@@ -16,7 +15,7 @@ class CustomersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: Color(0xfff8fafc),
         body: SafeArea(
@@ -48,16 +47,6 @@ class CustomersScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Tab(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.directions_car_rounded, size: 16),
-                          SizedBox(width: 6),
-                          Text('Visits', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                        ],
-                      ),
-                    ),
                   ],
                   indicatorColor: Color(0xff0f766e),
                   labelColor: Color(0xff0f766e),
@@ -71,7 +60,6 @@ class CustomersScreen extends StatelessWidget {
                   children: [
                     ActiveCustomersTabContent(),
                     PaymentsScreen(),
-                    VehicleBookingsScreen(),
                   ],
                 ),
               ),

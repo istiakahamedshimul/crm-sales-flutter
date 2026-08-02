@@ -143,7 +143,7 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Pipeline Visit Status',
+                  'Customer Visit Status',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,

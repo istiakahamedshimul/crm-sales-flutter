@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/screens/followups_screen.dart';
+import 'package:real_estate_crm_sales/screens/vehicle_bookings_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
@@ -20,7 +21,7 @@ class LeadsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Color(0xfff8fafc),
         body: SafeArea(
@@ -51,6 +52,16 @@ class LeadsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.directions_car_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Visits', style: TextStyle(fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                    ),
                   ],
                   indicatorColor: Color(0xff0f766e),
                   labelColor: Color(0xff0f766e),
@@ -64,6 +75,7 @@ class LeadsScreen extends StatelessWidget {
                   children: [
                     ActiveLeadsTabContent(),
                     FollowUpsScreen(),
+                    VehicleBookingsScreen(),
                   ],
                 ),
               ),
@@ -522,12 +534,12 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
   final SpeechToText speech = SpeechToText();
   String? selectedFilePath;
   String voiceLanguage = 'bn_BD';
-  String textBeforeListening = '';
   bool speechAvailable = false;
   bool listening = false;
   bool dictationRequested = false;
   bool speechStarting = false;
   Timer? speechRestartTimer;
+  int speechSession = 0;
   int type = 0;
   int nextStatus = 4;
   bool loading = false;
@@ -542,6 +554,7 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
   @override
   void dispose() {
     dictationRequested = false;
+    speechSession++;
     speechRestartTimer?.cancel();
     speech.stop();
     summary.dispose();
@@ -768,6 +781,7 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
   Future<void> toggleListening() async {
     if (dictationRequested) {
       dictationRequested = false;
+      speechSession++;
       speechRestartTimer?.cancel();
       await speech.stop();
       if (mounted) {
@@ -797,32 +811,42 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
 
     speechRestartTimer?.cancel();
     speechStarting = true;
-    textBeforeListening = summary.text.trim();
+    final session = ++speechSession;
+    final textAtSessionStart = summary.text.trim();
+    var finalResultHandled = false;
     if (mounted) setState(() {});
 
-    await speech.listen(
-      listenOptions: SpeechListenOptions(
-        localeId: voiceLanguage,
-        listenFor: const Duration(seconds: 55),
-        pauseFor: const Duration(seconds: 20),
-        listenMode: ListenMode.dictation,
-        partialResults: true,
-        cancelOnError: true,
-      ),
-      onResult: (result) {
-        final spoken = result.recognizedWords.trim();
-        final combined = [textBeforeListening, spoken]
-            .where((part) => part.isNotEmpty)
-            .join(textBeforeListening.isEmpty ? '' : ' ');
-        summary.value = TextEditingValue(
-          text: combined,
-          selection: TextSelection.collapsed(offset: combined.length),
-        );
-        if (result.finalResult) textBeforeListening = combined;
-      },
-    );
-    speechStarting = false;
-    if (mounted) setState(() {});
+    try {
+      await speech.listen(
+        listenOptions: SpeechListenOptions(
+          localeId: voiceLanguage,
+          listenFor: const Duration(seconds: 55),
+          pauseFor: const Duration(seconds: 20),
+          listenMode: ListenMode.dictation,
+          partialResults: true,
+          cancelOnError: true,
+        ),
+        onResult: (result) {
+          if (!mounted || session != speechSession || finalResultHandled) return;
+
+          final spoken = result.recognizedWords.trim();
+          final combined = [textAtSessionStart, spoken]
+              .where((part) => part.isNotEmpty)
+              .join(textAtSessionStart.isEmpty ? '' : ' ');
+          summary.value = TextEditingValue(
+            text: combined,
+            selection: TextSelection.collapsed(offset: combined.length),
+          );
+
+          // Android recognizers can deliver the same final result more than
+          // once. Keep the session base immutable and accept only the first.
+          if (result.finalResult) finalResultHandled = true;
+        },
+      );
+    } finally {
+      if (session == speechSession) speechStarting = false;
+      if (mounted) setState(() {});
+    }
   }
 
   void scheduleSpeechRestart({
