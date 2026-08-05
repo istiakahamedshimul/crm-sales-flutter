@@ -10,7 +10,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await oneSignalService.initialize();
   await apiClient.loadSession();
-  await locationTrackingService.configure();
+  try {
+    await locationTrackingService.configure();
+  } catch (error) {
+    debugPrint('[LocationTracking] configuration failed safely: $error');
+  }
   if (apiClient.userId != null) {
     await oneSignalService.login('crm-user-${apiClient.userId}');
   }
