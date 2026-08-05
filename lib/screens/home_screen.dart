@@ -7,6 +7,7 @@ import 'package:real_estate_crm_sales/screens/leads_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
+import 'package:real_estate_crm_sales/services/location_tracking_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.initialIndex = 0});
@@ -28,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     index = widget.initialIndex;
     _pageController = PageController(initialPage: index);
     oneSignalService.setAssignedLeadsNavigationHandler(_openAssignedLeads);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startLocationTracking());
     
     // Auto-sync in the background every 20 seconds to keep all screens updated live
     _syncTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
@@ -36,6 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
         AppEvents.instance.notifyReload();
       }
     });
+  }
+
+  Future<void> _startLocationTracking() async {
+    final started = await locationTrackingService.startWithPermission();
+    if (!started && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Location access is required while doing field work. Enable precise location in Settings.'),
+        action: SnackBarAction(label: 'Settings', onPressed: locationTrackingService.openSettings),
+        duration: const Duration(seconds: 8),
+      ));
+    }
   }
 
   @override

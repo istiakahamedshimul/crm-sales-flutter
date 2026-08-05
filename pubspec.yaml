@@ -18,6 +18,8 @@ dependencies:
   onesignal_flutter: 5.5.2
   url_launcher: ^6.3.1
   speech_to_text: 7.1.0
+  geolocator: ^13.0.4
+  flutter_background_service: ^5.1.0
 
 dev_dependencies:
   flutter_test:

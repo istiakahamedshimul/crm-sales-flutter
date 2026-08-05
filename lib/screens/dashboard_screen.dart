@@ -9,6 +9,7 @@ import 'package:real_estate_crm_sales/shared/crm_format.dart';
 import 'package:real_estate_crm_sales/shared/contact_actions.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
+import 'package:real_estate_crm_sales/services/location_tracking_service.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 import 'package:real_estate_crm_sales/widgets/screen_frame.dart';
 
@@ -81,6 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (confirm != true) return;
 
+    locationTrackingService.stop();
     await oneSignalService.logout();
     await apiClient.clearSession();
     if (!context.mounted) return;

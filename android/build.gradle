@@ -1,4 +1,9 @@
 allprojects {
+    // Some federated plugins still read these values while their own Gradle
+    // project is evaluated, before Flutter's app extension is available.
+    if (project.name != 'app') {
+        ext.flutter = [compileSdkVersion: 35, minSdkVersion: 21]
+    }
     repositories {
         google()
         mavenCentral()
