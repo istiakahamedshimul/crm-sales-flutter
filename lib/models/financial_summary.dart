@@ -1,0 +1,5 @@
+class FinancialSummary {
+  const FinancialSummary({required this.totalAgreedAmount,required this.totalPaid,required this.currentDue,required this.overdueAmount,required this.outstandingBalance,this.nextEmiAmount,this.nextEmiDueDate,required this.paymentStatus});
+  final double totalAgreedAmount,totalPaid,currentDue,overdueAmount,outstandingBalance; final double? nextEmiAmount; final DateTime? nextEmiDueDate; final String paymentStatus;
+  factory FinancialSummary.fromJson(Map<String,dynamic> j)=>FinancialSummary(totalAgreedAmount:(j['totalAgreedAmount'] as num?)?.toDouble()??0,totalPaid:(j['totalPaid'] as num?)?.toDouble()??0,currentDue:(j['currentDue'] as num?)?.toDouble()??0,overdueAmount:(j['overdueAmount'] as num?)?.toDouble()??0,outstandingBalance:(j['outstandingBalance'] as num?)?.toDouble()??0,nextEmiAmount:(j['nextEmiAmount'] as num?)?.toDouble(),nextEmiDueDate:j['nextEmiDueDate']==null?null:DateTime.parse(j['nextEmiDueDate']),paymentStatus:j['paymentStatus'] as String? ?? 'Not configured');
+}

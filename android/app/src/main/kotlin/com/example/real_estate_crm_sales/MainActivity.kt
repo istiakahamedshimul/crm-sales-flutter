@@ -18,10 +18,10 @@ class MainActivity : FlutterActivity() {
 
         val channel = NotificationChannel(
             LEAD_CHANNEL_ID,
-            "New lead assignments",
+            "CRM warning alerts",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Alerts when a new lead is assigned"
+            description = "Audible alerts for lead assignments and overdue follow-ups"
             enableVibration(true)
             setSound(
                 Uri.parse("android.resource://$packageName/raw/lead_notification"),
@@ -67,6 +67,6 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         // Versioned because Android notification-channel sounds are immutable after creation.
-        const val LEAD_CHANNEL_ID = "lead_assignments_tone_v4"
+        const val LEAD_CHANNEL_ID = "crm_warning_alerts_v1"
     }
 }

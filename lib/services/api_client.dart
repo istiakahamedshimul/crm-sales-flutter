@@ -8,9 +8,10 @@ import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/follow_up.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
-import 'package:real_estate_crm_sales/models/payment.dart';
+import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
+import 'package:real_estate_crm_sales/models/app_notification.dart';
 
 class ApiClient {
   String token = '';
@@ -138,9 +139,26 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
-  Future<List<Payment>> getPayments() async {
-    final data = await _getList('/payments');
-    return data.map((item) => Payment.fromJson(item)).toList();
+  Future<FinancialSummary> getCustomerFinancialSummary(int customerId) async {
+    final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/customers/$customerId/financial/summary'), headers: headers);
+    _throwIfFailed(response); return FinancialSummary.fromJson(jsonDecode(response.body) as Map<String,dynamic>);
+  }
+
+  Future<List<AppNotification>> getNotifications() async {
+    final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/notifications?pageSize=100'), headers: headers);
+    _throwIfFailed(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return (data['items'] as List<dynamic>).cast<Map<String, dynamic>>().map(AppNotification.fromJson).toList();
+  }
+
+  Future<void> markNotificationRead(int id) async {
+    final response = await http.put(Uri.parse('${AppConfig.apiBaseUrl}/notifications/$id/read'), headers: headers);
+    _throwIfFailed(response);
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    final response = await http.put(Uri.parse('${AppConfig.apiBaseUrl}/notifications/read-all'), headers: headers);
+    _throwIfFailed(response);
   }
 
   Future<void> updateLeadProject(int leadId, int projectId) async {
@@ -207,26 +225,6 @@ class ApiClient {
             : [
                 {'proofType': proofType ?? 4, 'fileUrl': proofUrl}
               ],
-      }),
-    );
-
-    _throwIfFailed(response);
-  }
-
-  Future<void> submitCollection(
-    int customerId,
-    double amount,
-    String proofUrl,
-  ) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/payments/collection'),
-      headers: headers,
-      body: jsonEncode({
-        'customerId': customerId,
-        'amount': amount,
-        'method': 0,
-        'proofUrl': proofUrl,
-        'remarks': 'Submitted from sales app',
       }),
     );
 

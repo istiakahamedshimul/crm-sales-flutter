@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
-import 'package:real_estate_crm_sales/models/payment.dart';
+import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
@@ -28,16 +28,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       apiClient.getProfile(),
       apiClient.getLeads(),
       apiClient.getBookedCustomers(),
-      apiClient.getPayments(),
       apiClient.getCommission(),
     ]);
 
+    final customers = results[2] as List<Customer>;
+    final financials = await Future.wait(customers.map((x) => apiClient.getCustomerFinancialSummary(x.id)));
     return _DashboardData(
       profile: results[0] as Map<String, dynamic>,
       leads: results[1] as List<Lead>,
       customers: results[2] as List<Customer>,
-      payments: results[3] as List<Payment>,
-      commission: results[4] as CommissionSummary,
+      financials: financials,
+      commission: results[3] as CommissionSummary,
     );
   }
 
@@ -145,9 +146,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           final item = snapshot.data!;
-          final totalCollection = item.payments.fold<num>(
+          final totalOutstanding = item.financials.fold<num>(
             0,
-            (total, payment) => total + payment.amount,
+            (total, summary) => total + summary.outstandingBalance,
           );
 
           final String userName = item.profile['fullName']?.toString() ?? 'Sales Executive';
@@ -249,9 +250,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     tileColor: const Color(0xff0f766e),
                   ),
                   _MetricTile(
-                    label: 'Total Collection',
-                    value: money(totalCollection),
-                    icon: Icons.payments_rounded,
+                    label: 'Outstanding',
+                    value: money(totalOutstanding),
+                    icon: Icons.account_balance_wallet_outlined,
                     tileColor: const Color(0xffd97706),
                   ),
                   _MetricTile(
@@ -460,13 +461,13 @@ class _DashboardData {
     required this.profile,
     required this.leads,
     required this.customers,
-    required this.payments,
+    required this.financials,
     required this.commission,
   });
 
   final Map<String, dynamic> profile;
   final List<Lead> leads;
   final List<Customer> customers;
-  final List<Payment> payments;
+  final List<FinancialSummary> financials;
   final CommissionSummary commission;
 }

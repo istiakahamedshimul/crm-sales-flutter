@@ -4,6 +4,7 @@ import 'package:real_estate_crm_sales/screens/commission_screen.dart';
 import 'package:real_estate_crm_sales/screens/customers_screen.dart';
 import 'package:real_estate_crm_sales/screens/dashboard_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
+import 'package:real_estate_crm_sales/screens/notifications_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
@@ -75,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const LeadsScreen(),
       const CustomersScreen(),
       const CommissionScreen(),
+      const NotificationsScreen(),
     ];
 
     return Scaffold(
@@ -125,6 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.account_balance_wallet_outlined, size: 22),
             selectedIcon: Icon(Icons.account_balance_wallet_rounded, color: Color(0xff0f766e), size: 22),
             label: 'Wallet',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_outlined, size: 22),
+            selectedIcon: Icon(Icons.notifications_rounded, color: Color(0xff0f766e), size: 22),
+            label: 'Alerts',
           ),
         ],
       ),
