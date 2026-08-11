@@ -77,6 +77,12 @@ class ApiClient {
     return data.map((item) => Customer.fromJson(item)).toList();
   }
 
+  Future<Map<String, dynamic>> getDashboardSummary() async {
+    final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/dashboard'), headers: headers);
+    _throwIfFailed(response);
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   Future<List<Customer>> getBookedCustomers() async {
     final data = await _getList('/customers/booked');
     return data.map((item) => Customer.fromJson(item)).toList();

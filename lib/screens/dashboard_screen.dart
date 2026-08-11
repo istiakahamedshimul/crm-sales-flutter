@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
-import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
@@ -29,15 +28,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       apiClient.getLeads(),
       apiClient.getBookedCustomers(),
       apiClient.getCommission(),
+      apiClient.getDashboardSummary(),
     ]);
 
-    final customers = results[2] as List<Customer>;
-    final financials = await Future.wait(customers.map((x) => apiClient.getCustomerFinancialSummary(x.id)));
     return _DashboardData(
       profile: results[0] as Map<String, dynamic>,
       leads: results[1] as List<Lead>,
       customers: results[2] as List<Customer>,
-      financials: financials,
+      totalOutstanding: ((results[4] as Map<String, dynamic>)['totalOutstanding'] as num?) ?? 0,
       commission: results[3] as CommissionSummary,
     );
   }
@@ -146,10 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           final item = snapshot.data!;
-          final totalOutstanding = item.financials.fold<num>(
-            0,
-            (total, summary) => total + summary.outstandingBalance,
-          );
+          final totalOutstanding = item.totalOutstanding;
 
           final String userName = item.profile['fullName']?.toString() ?? 'Sales Executive';
           final String userEmail = item.profile['email']?.toString() ?? 'sales@crm.local';
@@ -461,13 +456,13 @@ class _DashboardData {
     required this.profile,
     required this.leads,
     required this.customers,
-    required this.financials,
+    required this.totalOutstanding,
     required this.commission,
   });
 
   final Map<String, dynamic> profile;
   final List<Lead> leads;
   final List<Customer> customers;
-  final List<FinancialSummary> financials;
+  final num totalOutstanding;
   final CommissionSummary commission;
 }
