@@ -5,6 +5,7 @@ import 'package:real_estate_crm_sales/screens/customers_screen.dart';
 import 'package:real_estate_crm_sales/screens/dashboard_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
 import 'package:real_estate_crm_sales/screens/notifications_screen.dart';
+import 'package:real_estate_crm_sales/screens/daily_work_report_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
@@ -77,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const CustomersScreen(),
       const CommissionScreen(),
       const NotificationsScreen(),
+      const DailyWorkReportScreen(),
     ];
 
     return Scaffold(
@@ -133,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: Icon(Icons.notifications_rounded, color: Color(0xff0f766e), size: 22),
             label: 'Alerts',
           ),
+          NavigationDestination(icon:Icon(Icons.edit_note_rounded,size:22),selectedIcon:Icon(Icons.edit_note_rounded,color:Color(0xff0f766e),size:22),label:'Report'),
         ],
       ),
     );

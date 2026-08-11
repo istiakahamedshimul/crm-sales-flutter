@@ -77,6 +77,12 @@ class ApiClient {
     return data.map((item) => Customer.fromJson(item)).toList();
   }
 
+  Future<void> submitDailyWorkReport({required String summary,required String inputLanguage}) async {
+    final now=DateTime.now();final response=await http.post(Uri.parse('${AppConfig.apiBaseUrl}/daily-work-reports'),headers:headers,body:jsonEncode({'workDate':_dateOnly(now),'summary':summary,'inputLanguage':inputLanguage}));_throwIfFailed(response);
+  }
+
+  Future<List<Map<String,dynamic>>> getMyDailyWorkReports() async => _getList('/daily-work-reports/mine');
+
   Future<Map<String, dynamic>> getDashboardSummary() async {
     final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/dashboard'), headers: headers);
     _throwIfFailed(response);

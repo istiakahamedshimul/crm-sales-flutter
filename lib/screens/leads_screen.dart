@@ -830,9 +830,7 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
           if (!mounted || session != speechSession || finalResultHandled) return;
 
           final spoken = result.recognizedWords.trim();
-          final combined = [textAtSessionStart, spoken]
-              .where((part) => part.isNotEmpty)
-              .join(textAtSessionStart.isEmpty ? '' : ' ');
+          final combined = mergeRecognizedText(textAtSessionStart, spoken);
           summary.value = TextEditingValue(
             text: combined,
             selection: TextSelection.collapsed(offset: combined.length),
@@ -870,4 +868,15 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
       setState(() => selectedFilePath = path);
     }
   }
+}
+
+String mergeRecognizedText(String existing, String spoken) {
+  final base = existing.trim(); final incoming = spoken.trim();
+  if (base.isEmpty) return incoming; if (incoming.isEmpty || base == incoming || base.endsWith(incoming)) return base;
+  final oldWords = base.split(RegExp(r'\s+')); final newWords = incoming.split(RegExp(r'\s+'));
+  var overlap = 0; final limit = oldWords.length < newWords.length ? oldWords.length : newWords.length;
+  for (var size = 1; size <= limit; size++) {
+    if (oldWords.sublist(oldWords.length - size).join(' ') == newWords.sublist(0, size).join(' ')) overlap = size;
+  }
+  return [...oldWords, ...newWords.skip(overlap)].join(' ');
 }
