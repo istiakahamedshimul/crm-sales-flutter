@@ -246,50 +246,134 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 InkWell(
                   onTap: () => _showTargetHistory(context),
                   borderRadius: BorderRadius.circular(16),
-                  child: SalesCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('This Month\'s Targets', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)), TextButton.icon(onPressed: () => _showTargetHistory(context), icon: const Icon(Icons.history, size: 17), label: const Text('History'))]),
-                    const SizedBox(height: 10),
-                    _TargetLine(label: 'Sales units', achieved: '${item.currentTarget!['salesUnitsAchieved']} units', target: '${item.currentTarget!['salesUnitTarget']} units', variance: (item.currentTarget!['salesUnitVariance'] as num?) ?? 0, moneyValue: false),
-                    const Divider(height: 24),
-                    _TargetLine(label: 'Collection', achieved: money((item.currentTarget!['collectionAchieved'] as num?) ?? 0), target: money((item.currentTarget!['collectionTarget'] as num?) ?? 0), variance: (item.currentTarget!['collectionVariance'] as num?) ?? 0, moneyValue: true),
-                  ])),
+                  child: SalesCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'This Month\'s Targets',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                color: Color(0xff0f172a),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _showTargetHistory(context),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              icon: const Icon(Icons.history_rounded, size: 16),
+                              label: const Text(
+                                'History',
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _TargetProgressTile(
+                                label: 'Target Unit',
+                                icon: Icons.flag_rounded,
+                                achievedStr: '${item.currentTarget!['salesUnitsAchieved']}',
+                                targetStr: '${item.currentTarget!['salesUnitTarget']}',
+                                progress: ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0) > 0
+                                    ? (((item.currentTarget!['salesUnitsAchieved'] as num?) ?? 0) /
+                                            ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0))
+                                        .clamp(0.0, 1.0)
+                                    : 0.0,
+                                variance: (item.currentTarget!['salesUnitVariance'] as num?) ?? 0,
+                                moneyValue: false,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 1,
+                              height: 106,
+                              color: const Color(0xffe2e8f0),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _TargetProgressTile(
+                                label: 'Collection',
+                                icon: Icons.payments_rounded,
+                                achievedStr: moneyCompact((item.currentTarget!['collectionAchieved'] as num?) ?? 0),
+                                targetStr: moneyCompact((item.currentTarget!['collectionTarget'] as num?) ?? 0),
+                                progress: ((item.currentTarget!['collectionTarget'] as num?) ?? 0) > 0
+                                    ? (((item.currentTarget!['collectionAchieved'] as num?) ?? 0) /
+                                            ((item.currentTarget!['collectionTarget'] as num?) ?? 0))
+                                        .clamp(0.0, 1.0)
+                                    : 0.0,
+                                variance: (item.currentTarget!['collectionVariance'] as num?) ?? 0,
+                                moneyValue: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 14),
               ],
-              // Compact visual grid
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.35,
-                children: [
-                  _MetricTile(
-                    label: 'Assigned Leads',
-                    value: item.leads.length.toString(),
-                    icon: Icons.person_search_rounded,
-                    tileColor: const Color(0xff2563eb),
-                  ),
-                  _MetricTile(
-                    label: 'Booked Clients',
-                    value: item.customers.length.toString(),
-                    icon: Icons.people_alt_rounded,
-                    tileColor: const Color(0xff0f766e),
-                  ),
-                  _MetricTile(
-                    label: 'Outstanding',
-                    value: money(totalOutstanding),
-                    icon: Icons.account_balance_wallet_outlined,
-                    tileColor: const Color(0xffd97706),
-                  ),
-                  _MetricTile(
-                    label: 'Commissions',
-                    value: money(item.commission.totalEarned),
-                    icon: Icons.workspace_premium_rounded,
-                    tileColor: const Color(0xff7c3aed),
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _MetricTile(
+                        label: 'Assigned Leads',
+                        value: item.leads.length.toString(),
+                        icon: Icons.person_search_rounded,
+                        tileColor: const Color(0xff2563eb),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _MetricTile(
+                        label: 'Booked Clients',
+                        value: item.customers.length.toString(),
+                        icon: Icons.people_alt_rounded,
+                        tileColor: const Color(0xff0f766e),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _MetricTile(
+                        label: 'Collection of the Sales Executives',
+                        value: money(totalOutstanding),
+                        icon: Icons.account_balance_wallet_outlined,
+                        tileColor: const Color(0xffd97706),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _MetricTile(
+                        label: 'Commissions',
+                        value: money(item.commission.totalEarned),
+                        icon: Icons.workspace_premium_rounded,
+                        tileColor: const Color(0xff7c3aed),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               // Lead queue card with fast quick actions
@@ -443,12 +527,18 @@ class _MetricTile extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: tileColor, size: 20),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: tileColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: tileColor, size: 20),
+              ),
               Container(
                 width: 6,
                 height: 6,
@@ -459,23 +549,24 @@ class _MetricTile extends StatelessWidget {
               )
             ],
           ),
+          const Spacer(),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
               color: Color(0xff0f172a),
               letterSpacing: -0.5,
             ),
           ),
+          const SizedBox(height: 4),
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Color(0xff64748b),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
+              height: 1.2,
             ),
           ),
         ],
@@ -484,16 +575,128 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _TargetLine extends StatelessWidget {
-  const _TargetLine({required this.label, required this.achieved, required this.target, required this.variance, required this.moneyValue});
-  final String label, achieved, target; final num variance; final bool moneyValue;
-  @override Widget build(BuildContext context) { final over = variance >= 0; return Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(fontWeight: FontWeight.w800)), Text('$achieved achieved / $target target', style: const TextStyle(color: Color(0xff64748b), fontSize: 12))])), Text('${over ? 'Over by' : 'Short by'} ${moneyValue ? money(variance.abs()) : '${variance.abs()} units'}', style: TextStyle(color: over ? const Color(0xff067647) : const Color(0xffb42318), fontWeight: FontWeight.w800))]); }
+class _TargetProgressTile extends StatelessWidget {
+  const _TargetProgressTile({
+    required this.label,
+    required this.icon,
+    required this.achievedStr,
+    required this.targetStr,
+    required this.progress,
+    required this.variance,
+    required this.moneyValue,
+  });
+
+  final String label;
+  final IconData icon;
+  final String achievedStr;
+  final String targetStr;
+  final double progress;
+  final num variance;
+  final bool moneyValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final over = variance >= 0;
+    final progressPercent = (progress * 100).toStringAsFixed(0);
+    final varianceColor = over ? const Color(0xff067647) : const Color(0xffb42318);
+    final varianceBg = over ? const Color(0xffecfdf3) : const Color(0xfffef3f2);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xfff1f5f9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 15, color: const Color(0xff475569)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  color: Color(0xff1e293b),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$achievedStr / $targetStr',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xff64748b),
+              ),
+            ),
+            Text(
+              '$progressPercent%',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Color(0xff0f766e),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 5,
+            backgroundColor: const Color(0xfff1f5f9),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xff0d9488)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: varianceBg,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            '${over ? 'Over' : 'Short'} by ${moneyValue ? moneyCompact(variance.abs()) : '${variance.abs()} units'}',
+            style: TextStyle(
+              color: varianceColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _TargetHistoryRow extends StatelessWidget {
   const _TargetHistoryRow({required this.row}); final Map<String, dynamic> row;
-  @override Widget build(BuildContext context) { final unitVariance = (row['salesUnitVariance'] as num?) ?? 0; final collectionVariance = (row['collectionVariance'] as num?) ?? 0; return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shortDate(row['month']?.toString()), style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 6), _line('Sales', '${row['salesUnitsAchieved']} / ${row['salesUnitTarget']} units', unitVariance, false), _line('Collection', '${money((row['collectionAchieved'] as num?) ?? 0)} / ${money((row['collectionTarget'] as num?) ?? 0)}', collectionVariance, true)])); }
+  @override Widget build(BuildContext context) { final unitVariance = (row['salesUnitVariance'] as num?) ?? 0; final collectionVariance = (row['collectionVariance'] as num?) ?? 0; return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shortDate(row['month']?.toString()), style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 6), _line('Target Unit', '${row['salesUnitsAchieved']} / ${row['salesUnitTarget']} units', unitVariance, false), _line('Collection', '${money((row['collectionAchieved'] as num?) ?? 0)} / ${money((row['collectionTarget'] as num?) ?? 0)}', collectionVariance, true)])); }
   Widget _line(String label, String values, num variance, bool isMoney) => Padding(padding: const EdgeInsets.only(top: 4), child: Row(children: [SizedBox(width: 82, child: Text(label)), Expanded(child: Text(values)), Text('${variance >= 0 ? 'Over' : 'Short'} ${isMoney ? money(variance.abs()) : '${variance.abs()} units'}', style: TextStyle(color: variance >= 0 ? const Color(0xff067647) : const Color(0xffb42318), fontWeight: FontWeight.w700))]));
+}
+
+String moneyCompact(num value) {
+  if (value >= 10000000) {
+    return '৳${(value / 10000000).toStringAsFixed(1).replaceAll('.0', '')}Cr';
+  } else if (value >= 100000) {
+    return '৳${(value / 100000).toStringAsFixed(1).replaceAll('.0', '')}L';
+  } else if (value >= 1000) {
+    return '৳${(value / 1000).toStringAsFixed(1).replaceAll('.0', '')}k';
+  }
+  return '৳${value.toStringAsFixed(0)}';
 }
 
 class _DashboardData {
