@@ -36,6 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       leads: results[1] as List<Lead>,
       customers: results[2] as List<Customer>,
       totalOutstanding: ((results[4] as Map<String, dynamic>)['totalOutstanding'] as num?) ?? 0,
+      currentTarget: (results[4] as Map<String, dynamic>)['currentTarget'] as Map<String, dynamic>?,
       commission: results[3] as CommissionSummary,
     );
   }
@@ -88,6 +89,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
+  }
+
+  Future<void> _showTargetHistory(BuildContext context) async {
+    showDialog<void>(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    try {
+      final rows = await apiClient.getTargetHistory();
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      await showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (context) => SafeArea(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Monthly Target Report', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)), const SizedBox(height: 14),
+        if (rows.isEmpty) const Padding(padding: EdgeInsets.symmetric(vertical: 28), child: Center(child: Text('No monthly targets have been set.')))
+        else Flexible(child: ListView.separated(shrinkWrap: true, itemCount: rows.length, separatorBuilder: (_, __) => const Divider(), itemBuilder: (_, index) => _TargetHistoryRow(row: rows[index]))),
+      ]))));
+    } catch (error) {
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))));
+    }
   }
 
   @override
@@ -223,6 +242,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 14),
+              if (item.currentTarget != null) ...[
+                InkWell(
+                  onTap: () => _showTargetHistory(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: SalesCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('This Month\'s Targets', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)), TextButton.icon(onPressed: () => _showTargetHistory(context), icon: const Icon(Icons.history, size: 17), label: const Text('History'))]),
+                    const SizedBox(height: 10),
+                    _TargetLine(label: 'Sales units', achieved: '${item.currentTarget!['salesUnitsAchieved']} units', target: '${item.currentTarget!['salesUnitTarget']} units', variance: (item.currentTarget!['salesUnitVariance'] as num?) ?? 0, moneyValue: false),
+                    const Divider(height: 24),
+                    _TargetLine(label: 'Collection', achieved: money((item.currentTarget!['collectionAchieved'] as num?) ?? 0), target: money((item.currentTarget!['collectionTarget'] as num?) ?? 0), variance: (item.currentTarget!['collectionVariance'] as num?) ?? 0, moneyValue: true),
+                  ])),
+                ),
+                const SizedBox(height: 14),
+              ],
               // Compact visual grid
               GridView.count(
                 crossAxisCount: 2,
@@ -451,12 +484,25 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
+class _TargetLine extends StatelessWidget {
+  const _TargetLine({required this.label, required this.achieved, required this.target, required this.variance, required this.moneyValue});
+  final String label, achieved, target; final num variance; final bool moneyValue;
+  @override Widget build(BuildContext context) { final over = variance >= 0; return Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(fontWeight: FontWeight.w800)), Text('$achieved achieved / $target target', style: const TextStyle(color: Color(0xff64748b), fontSize: 12))])), Text('${over ? 'Over by' : 'Short by'} ${moneyValue ? money(variance.abs()) : '${variance.abs()} units'}', style: TextStyle(color: over ? const Color(0xff067647) : const Color(0xffb42318), fontWeight: FontWeight.w800))]); }
+}
+
+class _TargetHistoryRow extends StatelessWidget {
+  const _TargetHistoryRow({required this.row}); final Map<String, dynamic> row;
+  @override Widget build(BuildContext context) { final unitVariance = (row['salesUnitVariance'] as num?) ?? 0; final collectionVariance = (row['collectionVariance'] as num?) ?? 0; return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shortDate(row['month']?.toString()), style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 6), _line('Sales', '${row['salesUnitsAchieved']} / ${row['salesUnitTarget']} units', unitVariance, false), _line('Collection', '${money((row['collectionAchieved'] as num?) ?? 0)} / ${money((row['collectionTarget'] as num?) ?? 0)}', collectionVariance, true)])); }
+  Widget _line(String label, String values, num variance, bool isMoney) => Padding(padding: const EdgeInsets.only(top: 4), child: Row(children: [SizedBox(width: 82, child: Text(label)), Expanded(child: Text(values)), Text('${variance >= 0 ? 'Over' : 'Short'} ${isMoney ? money(variance.abs()) : '${variance.abs()} units'}', style: TextStyle(color: variance >= 0 ? const Color(0xff067647) : const Color(0xffb42318), fontWeight: FontWeight.w700))]));
+}
+
 class _DashboardData {
   const _DashboardData({
     required this.profile,
     required this.leads,
     required this.customers,
     required this.totalOutstanding,
+    required this.currentTarget,
     required this.commission,
   });
 
@@ -464,5 +510,6 @@ class _DashboardData {
   final List<Lead> leads;
   final List<Customer> customers;
   final num totalOutstanding;
+  final Map<String, dynamic>? currentTarget;
   final CommissionSummary commission;
 }
