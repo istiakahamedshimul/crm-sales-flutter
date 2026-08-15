@@ -3,6 +3,7 @@ import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:real_estate_crm_sales/screens/home_screen.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
+import 'package:real_estate_crm_sales/services/biometric_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,12 +17,24 @@ class _LoginScreenState extends State<LoginScreen> {
   final password = TextEditingController(text: AppConfig.defaultPassword);
   String error = '';
   bool loading = false;
+  bool biometricEnabled = false;
 
   @override
   void dispose() {
     email.dispose();
     password.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBiometricState();
+  }
+
+  Future<void> _loadBiometricState() async {
+    final enabled = await biometricAuthService.isEnabled;
+    if (mounted) setState(() => biometricEnabled = enabled);
   }
 
   @override
@@ -48,6 +61,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       loading: loading,
                       error: error,
                       onSubmit: login,
+                      biometricEnabled: biometricEnabled,
+                      onBiometricLogin: biometricLogin,
                     ),
                     const SizedBox(height: 24),
                     const _TrustStrip(),
@@ -87,6 +102,26 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(
         () => error = exception.toString().replaceFirst('Exception: ', ''),
       );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> biometricLogin() async {
+    setState(() { loading = true; error = ''; });
+    try {
+      final credentials = await biometricAuthService.authenticate();
+      if (credentials == null) return;
+      await apiClient.login(credentials.email, credentials.password);
+      await oneSignalService.login('crm-user-${apiClient.userId}');
+      if (!mounted) return;
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (exception) {
+      if (mounted) {
+        setState(() => error = exception.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -238,6 +273,8 @@ class _LoginForm extends StatelessWidget {
     required this.loading,
     required this.error,
     required this.onSubmit,
+    required this.biometricEnabled,
+    required this.onBiometricLogin,
   });
 
   final TextEditingController email;
@@ -245,6 +282,8 @@ class _LoginForm extends StatelessWidget {
   final bool loading;
   final String error;
   final VoidCallback onSubmit;
+  final bool biometricEnabled;
+  final VoidCallback onBiometricLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -323,6 +362,14 @@ class _LoginForm extends StatelessWidget {
               ],
             ),
           ),
+          if (biometricEnabled) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: loading ? null : onBiometricLogin,
+              icon: const Icon(Icons.fingerprint_rounded, size: 24),
+              label: const Text('Sign in with fingerprint'),
+            ),
+          ],
           if (error.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 14),
