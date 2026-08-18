@@ -7,6 +7,7 @@ import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/shared/crm_format.dart';
 import 'package:real_estate_crm_sales/shared/contact_actions.dart';
 import 'package:real_estate_crm_sales/screens/login_screen.dart';
+import 'package:real_estate_crm_sales/screens/sales_performance_screen.dart';
 import 'package:real_estate_crm_sales/services/one_signal_service.dart';
 import 'package:real_estate_crm_sales/services/location_tracking_service.dart';
 import 'package:real_estate_crm_sales/widgets/sales_card.dart';
@@ -117,6 +118,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       action: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton.filledTonal(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesPerformanceScreen())),
+            icon: const Icon(Icons.assessment_rounded, size: 20),
+            tooltip: 'Filtered Performance',
+          ),
+          const SizedBox(width: 8),
           IconButton.filledTonal(
             onPressed: () => setState(() => data = _load()),
             icon: const Icon(Icons.refresh_rounded, size: 20),
@@ -357,7 +364,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Expanded(
                       child: _MetricTile(
-                        label: 'Collection of the Sales Executives',
+                        label: 'Collection',
                         value: money(totalOutstanding),
                         icon: Icons.account_balance_wallet_outlined,
                         tileColor: const Color(0xffd97706),

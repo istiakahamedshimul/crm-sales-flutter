@@ -104,6 +104,17 @@ class ApiClient {
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> getSalesPerformance(DateTime from, DateTime to) async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/dashboard/sales-report').replace(queryParameters: {
+      'salesExecutiveId': '$userId',
+      'from': _dateOnly(from),
+      'to': _dateOnly(to),
+    });
+    final response = await http.get(uri, headers: headers);
+    _throwIfFailed(response);
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   Future<List<Map<String, dynamic>>> getTargetHistory() async => _getList('/dashboard/targets');
 
   Future<List<Customer>> getBookedCustomers() async {
