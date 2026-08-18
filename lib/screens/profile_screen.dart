@@ -66,6 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 4),
                         Text(profile?['email']?.toString() ?? '', style: const TextStyle(color: Color(0xff64748b))),
                         const SizedBox(height: 4),
+                        Text(profile?['designation']?.toString() ?? 'Sales Executive', style: const TextStyle(color: Color(0xff0f766e), fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
                         Text(profile?['role']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w700)),
                       ]),
                     ),
