@@ -22,6 +22,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<_DashboardData> data = _load();
+  bool _locationEnabled = true;
+  bool _locationChanging = false;
 
   Future<_DashboardData> _load() async {
     final results = await Future.wait([
@@ -45,7 +47,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    locationTrackingService.loadEnabled().then((value) { if (mounted) setState(() => _locationEnabled = value); });
     AppEvents.instance.addListener(_onAppReload);
+  }
+
+  Future<void> _setLocationTracking(bool enabled) async {
+    setState(() { _locationEnabled = enabled; _locationChanging = true; });
+    final saved = await locationTrackingService.setEnabled(enabled);
+    if (!mounted) return;
+    setState(() => _locationChanging = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(saved
+        ? (enabled ? 'App location tracking turned on.' : 'App location tracking turned off.')
+        : 'Could not save the location tracking setting. Please try again.')));
   }
 
   @override
@@ -178,6 +191,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              SalesCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(_locationEnabled ? Icons.location_on_rounded : Icons.location_off_rounded, color: _locationEnabled ? const Color(0xff0f766e) : const Color(0xffe11d48)),
+                  title: const Text('App location tracking', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text(_locationEnabled ? 'On — the app can share your field location' : 'Off — the app will not track you even if phone location is on'),
+                  value: _locationEnabled,
+                  onChanged: _locationChanging ? null : _setLocationTracking,
+                ),
+              ),
+              const SizedBox(height: 12),
               // Premium profile card
               SalesCard(
                 padding: const EdgeInsets.all(18),

@@ -44,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _startLocationTracking() async {
+    final enabled = await locationTrackingService.loadEnabled();
+    if (!enabled) return;
     final started = await locationTrackingService.startWithPermission();
     if (!started && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

@@ -7,6 +7,7 @@ import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _pendingKey = 'pending_location_points';
+const _enabledKey = 'location_tracking_enabled';
 
 class LocationTrackingService {
   StreamSubscription<Position>? _subscription;
@@ -14,7 +15,39 @@ class LocationTrackingService {
 
   Future<void> configure() async {}
 
+  Future<bool> loadEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    final local = prefs.getBool(_enabledKey) ?? true;
+    final token = prefs.getString('token') ?? '';
+    if (token.isEmpty) return local;
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/locations/tracking-status'), headers: {'Authorization': 'Bearer $token'}).timeout(const Duration(seconds: 10));
+      if (response.statusCode < 300) {
+        final enabled = (jsonDecode(response.body) as Map<String, dynamic>)['enabled'] as bool? ?? local;
+        await prefs.setBool(_enabledKey, enabled);
+        return enabled;
+      }
+    } catch (_) {}
+    return local;
+  }
+
+  Future<bool> setEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enabledKey, enabled);
+    if (!enabled) await stop();
+    final token = prefs.getString('token') ?? '';
+    if (token.isEmpty) return false;
+    try {
+      final response = await http.put(Uri.parse('${AppConfig.apiBaseUrl}/locations/tracking-status'), headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'}, body: jsonEncode({'enabled': enabled})).timeout(const Duration(seconds: 10));
+      if (response.statusCode >= 300) return false;
+      if (enabled) unawaited(startWithPermission());
+      return true;
+    } catch (_) { return false; }
+  }
+
   Future<bool> startWithPermission() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool(_enabledKey) ?? true)) return false;
     if (_starting) return false;
     if (_subscription != null) return true;
     _starting = true;
