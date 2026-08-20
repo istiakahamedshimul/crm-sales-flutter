@@ -563,9 +563,8 @@ class _FollowUpSheet extends StatefulWidget {
 
 class _FollowUpSheetState extends State<_FollowUpSheet> {
   final summary = TextEditingController();
-  final proof = TextEditingController();
   final SpeechToText speech = SpeechToText();
-  String? selectedFilePath;
+  final List<String> selectedFilePaths = [];
   String voiceLanguage = 'bn_BD';
   bool speechAvailable = false;
   bool listening = false;
@@ -591,7 +590,6 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
     speechRestartTimer?.cancel();
     speech.stop();
     summary.dispose();
-    proof.dispose();
     super.dispose();
   }
 
@@ -688,22 +686,21 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: proof,
-            decoration: const InputDecoration(
-              labelText: 'Proof Link (URL / uploaded receipt)',
-            ),
-          ),
-          const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: pickProof,
             icon: const Icon(Icons.attach_file_rounded),
-            label: Text(
-              selectedFilePath == null
-                  ? 'Choose local file receipt'
-                  : selectedFilePath!.split(RegExp(r'[\\/]')).last,
-            ),
+            label: Text(selectedFilePaths.isEmpty ? 'Choose photos or files *' : 'Add more files (${selectedFilePaths.length} selected)'),
           ),
+          if (selectedFilePaths.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...selectedFilePaths.asMap().entries.map((entry) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.insert_drive_file_outlined, color: Color(0xff0f766e)),
+              title: Text(entry.value.split(RegExp(r'[\\/]')).last, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: IconButton(icon: const Icon(Icons.close_rounded), tooltip: 'Remove', onPressed: loading ? null : () => setState(() => selectedFilePaths.removeAt(entry.key))),
+            )),
+          ],
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             value: nextStatus,
@@ -737,6 +734,10 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
       setState(() => error = 'Please enter a summary of the follow-up.');
       return;
     }
+    if (selectedFilePaths.isEmpty) {
+      setState(() => error = 'Please attach at least one follow-up photo or file.');
+      return;
+    }
 
     setState(() {
       loading = true;
@@ -744,20 +745,14 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
     });
 
     try {
-      var proofUrl = proof.text.trim();
-      if (selectedFilePath != null) {
-        proofUrl = await apiClient.uploadFile(
-          selectedFilePath!,
-          category: 'followups',
-        );
-      }
+      final proofUrls = await Future.wait(selectedFilePaths.map((path) => apiClient.uploadFile(path, category: 'followups')));
 
       await apiClient.submitFollowUp(
         leadId: widget.lead.id,
         type: type,
         summary: summary.text.trim(),
         newLeadStatus: nextStatus,
-        proofUrl: proofUrl,
+        proofs: proofUrls.map((url) => {'proofType': 4, 'fileUrl': url}).toList(),
       );
       if (mounted) Navigator.pop(context, true);
     } catch (exception) {
@@ -894,11 +889,16 @@ class _FollowUpSheetState extends State<_FollowUpSheet> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'mp3', 'm4a', 'wav'],
+      allowMultiple: true,
     );
 
-    final path = result?.files.single.path;
-    if (path != null) {
-      setState(() => selectedFilePath = path);
+    final paths = result?.files.map((file) => file.path).whereType<String>().toList() ?? [];
+    if (paths.isNotEmpty) {
+      setState(() {
+        for (final path in paths) {
+          if (!selectedFilePaths.contains(path) && selectedFilePaths.length < 20) selectedFilePaths.add(path);
+        }
+      });
     }
   }
 }

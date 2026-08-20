@@ -249,8 +249,7 @@ class ApiClient {
     required String summary,
     DateTime? nextFollowUpAt,
     int? newLeadStatus,
-    String? proofUrl,
-    int? proofType,
+    required List<Map<String, dynamic>> proofs,
   }) async {
     final response = await http.post(
       Uri.parse('${AppConfig.apiBaseUrl}/followups'),
@@ -265,11 +264,7 @@ class ApiClient {
                 .toUtc()
                 .toIso8601String(),
         'newLeadStatus': newLeadStatus,
-        'proofs': proofUrl == null || proofUrl.isEmpty
-            ? []
-            : [
-                {'proofType': proofType ?? 4, 'fileUrl': proofUrl}
-              ],
+        'proofs': proofs,
       }),
     );
 
