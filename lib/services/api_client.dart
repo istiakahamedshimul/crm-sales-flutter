@@ -167,6 +167,15 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
+  Future<void> cancelVehicleBooking(int id, String reason) async {
+    final response = await http.post(
+      Uri.parse('${AppConfig.apiBaseUrl}/vehicle-bookings/$id/cancel'),
+      headers: headers,
+      body: jsonEncode({'reason': reason}),
+    );
+    _throwIfFailed(response);
+  }
+
   String _dateOnly(DateTime value) =>
       '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 

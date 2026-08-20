@@ -277,9 +277,101 @@ class _VehicleBookingsScreenState extends State<VehicleBookingsScreen> {
               ),
             ),
           ],
+          if (b.cancellationReason?.isNotEmpty == true) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xfffff1f2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xffffcdd3)),
+              ),
+              child: Text(
+                'CANCELLATION REASON\n${b.cancellationReason}',
+                style: const TextStyle(color: Color(0xff9f1239), fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+          if (_canCancel(b)) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _cancelBooking(b),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('Cancel Visit'),
+                style: OutlinedButton.styleFrom(foregroundColor: const Color(0xffbe123c)),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  bool _canCancel(VehicleBooking booking) {
+    if (booking.status != 0 && booking.status != 1) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final visitDay = DateTime(booking.visitDate.year, booking.visitDate.month, booking.visitDate.day);
+    return !today.isAfter(visitDay);
+  }
+
+  Future<void> _cancelBooking(VehicleBooking booking) async {
+    final controller = TextEditingController();
+    String? validation;
+    bool saving = false;
+    final cancelled = await showDialog<bool>(
+      context: context,
+      barrierDismissible: !saving,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialog) => AlertDialog(
+          title: const Text('Cancel visit'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Explain why the visit for ${booking.customer} is being cancelled.'),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                enabled: !saving,
+                autofocus: true,
+                minLines: 3,
+                maxLines: 5,
+                decoration: InputDecoration(labelText: 'Cancellation reason *', errorText: validation),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext, false), child: const Text('Keep Visit')),
+            FilledButton(
+              onPressed: saving ? null : () async {
+                final reason = controller.text.trim();
+                if (reason.isEmpty) {
+                  setDialog(() => validation = 'Cancellation reason is required.');
+                  return;
+                }
+                setDialog(() { saving = true; validation = null; });
+                try {
+                  await apiClient.cancelVehicleBooking(booking.id, reason);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                } catch (error) {
+                  setDialog(() { saving = false; validation = error.toString().replaceFirst('Exception: ', ''); });
+                }
+              },
+              child: Text(saving ? 'Cancelling...' : 'Confirm Cancellation'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (cancelled == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Visit cancelled successfully.')));
+      setState(_load);
+    }
   }
 
   Widget _buildDetailRow(IconData icon, String text) {
