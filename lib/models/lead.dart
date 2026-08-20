@@ -10,6 +10,10 @@ class Lead {
     this.projectId,
     this.projectName,
     this.projectType,
+    this.source,
+    this.referrerName,
+    this.referrerPhone,
+    this.referrerEmail,
   });
 
   final int id;
@@ -22,6 +26,10 @@ class Lead {
   final int? projectId;
   final String? projectName;
   final Object? projectType;
+  final Object? source;
+  final String? referrerName;
+  final String? referrerPhone;
+  final String? referrerEmail;
 
   factory Lead.fromJson(Map<String, dynamic> json) {
     return Lead(
@@ -35,6 +43,10 @@ class Lead {
       projectId: json['projectId'] as int?,
       projectName: json['projectName'] as String?,
       projectType: json['projectType'],
+      source: json['source'],
+      referrerName: json['referrerName'] as String?,
+      referrerPhone: json['referrerPhone'] as String?,
+      referrerEmail: json['referrerEmail'] as String?,
     );
   }
 }

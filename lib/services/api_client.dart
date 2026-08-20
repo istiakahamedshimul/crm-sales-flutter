@@ -210,6 +210,11 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
+  Future<void> createMyLead(Map<String, dynamic> request) async {
+    final response = await http.post(Uri.parse('${AppConfig.apiBaseUrl}/leads/mine'), headers: headers, body: jsonEncode(request));
+    _throwIfFailed(response);
+  }
+
   Future<CommissionSummary> getCommission() async {
     final response = await http.get(
       Uri.parse('${AppConfig.apiBaseUrl}/commissions/me'),

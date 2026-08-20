@@ -122,9 +122,13 @@ class _ActiveLeadsTabContentState extends State<ActiveLeadsTabContent> {
     return ScreenFrame(
       title: 'Assigned Leads',
       subtitle: 'LEAD PIPELINE',
-      action: IconButton.filledTonal(
-        onPressed: () => setState(() => leads = apiClient.getLeads()),
-        icon: const Icon(Icons.refresh_rounded, size: 20),
+      action: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton.filled(onPressed: _addLead, icon: const Icon(Icons.person_add_alt_1_rounded, size: 20), tooltip: 'Add self/referral lead'),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(onPressed: () => setState(() => leads = apiClient.getLeads()), icon: const Icon(Icons.refresh_rounded, size: 20)),
+        ],
       ),
       child: FutureBuilder<List<Lead>>(
         future: leads,
@@ -244,6 +248,29 @@ class _ActiveLeadsTabContentState extends State<ActiveLeadsTabContent> {
         },
       ),
     );
+  }
+
+  Future<void> _addLead() async {
+    final projects = await apiClient.getProjects();
+    if (!mounted) return;
+    final formKey = GlobalKey<FormState>();
+    final name = TextEditingController(); final phone = TextEditingController(); final altPhone = TextEditingController(); final email = TextEditingController();
+    final refName = TextEditingController(); final refPhone = TextEditingController(); final refEmail = TextEditingController(); final remarks = TextEditingController();
+    var source = 12; int? projectId; bool saving = false; String? error;
+    final saved = await showModalBottomSheet<bool>(context: context,isScrollControlled:true,useSafeArea:true,builder:(sheetContext)=>StatefulBuilder(builder:(context,setSheetState)=>Padding(padding:EdgeInsets.fromLTRB(20,20,20,MediaQuery.of(context).viewInsets.bottom+20),child:Form(key:formKey,child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      const Text('Add a new lead',style:TextStyle(fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:4),const Text('Create your own lead or record a referral.'),const SizedBox(height:16),
+      SegmentedButton<int>(segments:const [ButtonSegment(value:12,label:Text('Self')),ButtonSegment(value:5,label:Text('Referral'))],selected:{source},onSelectionChanged:saving?null:(value)=>setSheetState(()=>source=value.first)),const SizedBox(height:12),
+      TextFormField(controller:name,decoration:const InputDecoration(labelText:'Lead name *'),validator:(v)=>v==null||v.trim().isEmpty?'Name is required':null),const SizedBox(height:10),
+      TextFormField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Phone *'),validator:(v)=>v==null||v.trim().isEmpty?'Phone is required':null),const SizedBox(height:10),
+      TextFormField(controller:altPhone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Alternative phone')),const SizedBox(height:10),
+      TextFormField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'Email (optional)')),const SizedBox(height:10),
+      DropdownButtonFormField<int?>(value:projectId,isExpanded:true,decoration:const InputDecoration(labelText:'Project'),items:[const DropdownMenuItem<int?>(value:null,child:Text('Select project')), ...projects.map((p)=>DropdownMenuItem<int?>(value:p.id,child:Text(p.name)))],onChanged:(v)=>setSheetState(()=>projectId=v)),
+      if(source==5)...[const SizedBox(height:10),TextFormField(controller:refName,decoration:const InputDecoration(labelText:'Referrer name *'),validator:(v)=>source==5&&(v==null||v.trim().isEmpty)?'Referrer name is required':null),const SizedBox(height:10),TextFormField(controller:refPhone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Referrer phone *'),validator:(v)=>source==5&&(v==null||v.trim().isEmpty)?'Referrer phone is required':null),const SizedBox(height:10),TextFormField(controller:refEmail,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'Referrer email (optional)'))],
+      const SizedBox(height:10),TextFormField(controller:remarks,maxLines:3,decoration:const InputDecoration(labelText:'Remarks')),if(error!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text(error!,style:const TextStyle(color:Colors.red))),const SizedBox(height:16),
+      FilledButton(onPressed:saving?null:()async{if(!formKey.currentState!.validate())return;setSheetState((){saving=true;error=null;});try{await apiClient.createMyLead({'customerName':name.text.trim(),'phone':phone.text.trim(),'alternativePhone':altPhone.text.trim().isEmpty?null:altPhone.text.trim(),'email':email.text.trim().isEmpty?null:email.text.trim(),'projectId':projectId,'source':source,'remarks':remarks.text.trim().isEmpty?null:remarks.text.trim(),'referrerName':source==5?refName.text.trim():null,'referrerPhone':source==5?refPhone.text.trim():null,'referrerEmail':source==5&&refEmail.text.trim().isNotEmpty?refEmail.text.trim():null});if(context.mounted)Navigator.pop(context,true);}catch(e){setSheetState((){saving=false;error=e.toString().replaceFirst('Exception: ','');});}},child:Text(saving?'Saving...':'Add lead'))
+    ]))))));
+    name.dispose();phone.dispose();altPhone.dispose();email.dispose();refName.dispose();refPhone.dispose();refEmail.dispose();remarks.dispose();
+    if(saved==true&&mounted){setState(()=>leads=apiClient.getLeads());AppEvents.instance.notifyReload();}
   }
 
   Future<void> openFollowUp(Lead lead) async {
@@ -394,6 +421,8 @@ class _LeadCard extends StatelessWidget {
           Row(
             children: [
               StatusPill(label: enumLabel(leadStatuses, lead.status)),
+              const SizedBox(width: 8),
+              StatusPill(label: lead.source == 12 ? 'Self' : lead.source == 5 ? 'Referral' : 'Company'),
               if (lead.nextFollowUpAt != null) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -421,6 +450,10 @@ class _LeadCard extends StatelessWidget {
               ],
             ],
           ),
+          if (lead.source == 5 && lead.referrerName != null) ...[
+            const SizedBox(height: 8),
+            Text('Referred by ${lead.referrerName} · ${lead.referrerPhone ?? ''}${lead.referrerEmail == null ? '' : ' · ${lead.referrerEmail}'}', style: const TextStyle(fontSize: 11, color: Color(0xff64748b), fontWeight: FontWeight.w600)),
+          ],
           const Divider(height: 24, color: Color(0xfff1f5f9)),
           Row(
             children: [
