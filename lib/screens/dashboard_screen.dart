@@ -191,26 +191,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Premium profile card & compact Location Tracking Toggle
               SalesCard(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: SwitchListTile.adaptive(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(_locationEnabled ? Icons.location_on_rounded : Icons.location_off_rounded, color: _locationEnabled ? const Color(0xff0f766e) : const Color(0xffe11d48)),
-                  title: const Text('App location tracking', style: TextStyle(fontWeight: FontWeight.w800)),
-                  subtitle: Text(_locationEnabled ? 'On — the app can share your field location' : 'Off — the app will not track you even if phone location is on'),
-                  value: _locationEnabled,
-                  onChanged: _locationChanging ? null : _setLocationTracking,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Premium profile card
-              SalesCard(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 36,
+                      height: 36,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
@@ -225,11 +213,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 20,
+                          fontSize: 15,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,49 +225,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             userName,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
                               color: Color(0xff0f172a),
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1),
                           Text(
                             userEmail,
                             style: const TextStyle(
                               color: Color(0xff64748b),
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _locationEnabled ? const Color(0xffeff6ff) : const Color(0xfffff1f2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _locationEnabled ? const Color(0xffdbeafe) : const Color(0xffffe4e6),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _locationEnabled ? Icons.location_on_rounded : Icons.location_off_rounded,
+                            color: _locationEnabled ? const Color(0xff2563eb) : const Color(0xffe11d48),
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _locationEnabled ? 'Tracking' : 'Off',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: _locationEnabled ? const Color(0xff2563eb) : const Color(0xffe11d48),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Transform.scale(
+                            scale: 0.7,
+                            child: Switch.adaptive(
+                              value: _locationEnabled,
+                              onChanged: _locationChanging ? null : _setLocationTracking,
+                              activeColor: const Color(0xff2563eb),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xfff1f5f9),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xffe2e8f0)),
-                      ),
-                      child: const Text(
-                        'Active',
-                        style: TextStyle(
-                          color: Color(0xff0f766e),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               if (item.currentTarget != null) ...[
                 InkWell(
                   onTap: () => _showTargetHistory(context),
                   borderRadius: BorderRadius.circular(16),
                   child: SalesCard(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -290,26 +305,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               'This Month\'s Targets',
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
-                                fontSize: 16,
+                                fontSize: 14,
                                 color: Color(0xff0f172a),
                               ),
                             ),
                             TextButton.icon(
                               onPressed: () => _showTargetHistory(context),
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              icon: const Icon(Icons.history_rounded, size: 16),
+                              icon: const Icon(Icons.history_rounded, size: 14),
                               label: const Text(
                                 'History',
-                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -321,20 +336,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 targetStr: '${item.currentTarget!['salesUnitTarget']}',
                                 progress: ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0) > 0
                                     ? (((item.currentTarget!['salesUnitsAchieved'] as num?) ?? 0) /
-                                            ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0))
-                                        .clamp(0.0, 1.0)
+                                             ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0))
+                                         .clamp(0.0, 1.0)
                                     : 0.0,
                                 variance: (item.currentTarget!['salesUnitVariance'] as num?) ?? 0,
                                 moneyValue: false,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Container(
                               width: 1,
-                              height: 106,
+                              height: 52,
                               color: const Color(0xffe2e8f0),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: _TargetProgressTile(
                                 label: 'Collection',
@@ -343,8 +358,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 targetStr: moneyCompact((item.currentTarget!['collectionTarget'] as num?) ?? 0),
                                 progress: ((item.currentTarget!['collectionTarget'] as num?) ?? 0) > 0
                                     ? (((item.currentTarget!['collectionAchieved'] as num?) ?? 0) /
-                                            ((item.currentTarget!['collectionTarget'] as num?) ?? 0))
-                                        .clamp(0.0, 1.0)
+                                             ((item.currentTarget!['collectionTarget'] as num?) ?? 0))
+                                         .clamp(0.0, 1.0)
                                     : 0.0,
                                 variance: (item.currentTarget!['collectionVariance'] as num?) ?? 0,
                                 moneyValue: true,
@@ -356,28 +371,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
               ],
               IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: _MetricTile(
-                        label: 'Assigned Leads',
-                        value: item.leads.length.toString(),
-                        icon: Icons.person_search_rounded,
-                        tileColor: const Color(0xff2563eb),
-                      ),
+                      child: _MetricTile(label: 'Assigned Leads', value: item.leads.length.toString(), icon: Icons.person_search_rounded, tileColor: const Color(0xff2563eb)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MetricTile(
-                        label: 'Booked Clients',
-                        value: item.customers.length.toString(),
-                        icon: Icons.people_alt_rounded,
-                        tileColor: const Color(0xff0f766e),
-                      ),
+                      child: _MetricTile(label: 'Booked Clients', value: item.customers.length.toString(), icon: Icons.people_alt_rounded, tileColor: const Color(0xff0f766e)),
                     ),
                   ],
                 ),
@@ -388,28 +393,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: _MetricTile(
-                        label: 'Collection',
-                        value: money(totalOutstanding),
-                        icon: Icons.account_balance_wallet_outlined,
-                        tileColor: const Color(0xffd97706),
-                      ),
+                      child: _MetricTile(label: 'Collection', value: money(totalOutstanding), icon: Icons.account_balance_wallet_outlined, tileColor: const Color(0xffd97706)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MetricTile(
-                        label: 'Commissions',
-                        value: money(item.commission.totalEarned),
-                        icon: Icons.workspace_premium_rounded,
-                        tileColor: const Color(0xff7c3aed),
-                      ),
+                      child: _MetricTile(label: 'Commissions', value: money(item.commission.totalEarned), icon: Icons.workspace_premium_rounded, tileColor: const Color(0xff7c3aed)),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               // Lead queue card with fast quick actions
               SalesCard(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -420,13 +416,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'Recent Leads',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
-                            fontSize: 17,
+                            fontSize: 15,
                             color: Color(0xff0f172a),
                           ),
                         ),
                         if (item.leads.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xffeff6ff),
                               borderRadius: BorderRadius.circular(12),
@@ -434,7 +430,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               '${item.leads.length} total',
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xff2563eb),
                               ),
@@ -442,10 +438,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     if (item.leads.isEmpty)
                       const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
+                        padding: EdgeInsets.symmetric(vertical: 20),
                         child: Center(
                           child: Text(
                             'No assigned leads yet. Admin will distribute leads soon.',
@@ -453,6 +449,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: TextStyle(
                               color: Color(0xff64748b),
                               fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
                           ),
                         ),
@@ -462,7 +459,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: item.leads.take(4).length,
-                        separatorBuilder: (_, __) => const Divider(color: Color(0xfff1f5f9), height: 16),
+                        separatorBuilder: (_, __) => const Divider(color: Color(0xfff1f5f9), height: 10),
                         itemBuilder: (context, index) {
                           final lead = item.leads[index];
                           return Row(
@@ -475,16 +472,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       lead.customerName,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w800,
-                                        fontSize: 15,
+                                        fontSize: 14,
                                         color: Color(0xff0f172a),
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    const SizedBox(height: 1),
                                     Text(
                                       lead.phone,
                                       style: const TextStyle(
                                         color: Color(0xff64748b),
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -498,18 +495,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
                                     onPressed: () => callPhone(context, lead.phone),
-                                    icon: const Icon(Icons.call, size: 16),
+                                    icon: const Icon(Icons.call, size: 14),
                                     tooltip: 'Call client',
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 4),
                                   IconButton.filledTonal(
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
                                     onPressed: () => openWhatsApp(context, lead.phone),
-                                    icon: const WhatsAppIcon(size: 16),
+                                    icon: const WhatsAppIcon(size: 14),
                                     tooltip: 'WhatsApp client',
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   StatusPill(label: enumLabel(leadStatuses, lead.status)),
                                 ],
                               ),
@@ -549,46 +546,26 @@ class _MetricTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xfff1f5f9), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xff0f172a).withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: tileColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: tileColor, size: 20),
-              ),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: tileColor.withOpacity(0.4),
-                ),
-              )
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: tileColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: tileColor, size: 20),
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: Color(0xff0f172a),
-              letterSpacing: -0.5,
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Color(0xff0f172a),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -638,39 +615,18 @@ class _TargetProgressTile extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xfff1f5f9),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 15, color: const Color(0xff475569)),
-            ),
-            const SizedBox(width: 8),
+            Icon(icon, size: 14, color: const Color(0xff475569)),
+            const SizedBox(width: 4),
             Expanded(
               child: Text(
                 label,
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 13,
+                  fontSize: 12,
                   color: Color(0xff1e293b),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$achievedStr / $targetStr',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xff64748b),
               ),
             ),
             Text(
@@ -683,30 +639,43 @@ class _TargetProgressTile extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$achievedStr / $targetStr',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xff64748b),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: varianceBg,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${over ? '+' : '-'}${moneyValue ? moneyCompact(variance.abs()) : variance.abs().toString()}',
+                style: TextStyle(
+                  color: varianceColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 9,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 5,
+            minHeight: 4,
             backgroundColor: const Color(0xfff1f5f9),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xff0d9488)),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: varianceBg,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            '${over ? 'Over' : 'Short'} by ${moneyValue ? moneyCompact(variance.abs()) : '${variance.abs()} units'}',
-            style: TextStyle(
-              color: varianceColor,
-              fontWeight: FontWeight.w800,
-              fontSize: 10,
-            ),
           ),
         ),
       ],
