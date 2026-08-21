@@ -43,7 +43,7 @@ class _CustomerPaymentsScreenState extends State<CustomerPaymentsScreen> {
   @override
   Widget build(BuildContext context) => ScreenFrame(
         title: 'Customer Payments',
-        subtitle: 'PAYMENT TRANSACTIONS',
+        subtitle: 'CLIENT COLLECTIONS',
         action: IconButton.filledTonal(onPressed: _reload, icon: const Icon(Icons.refresh_rounded)),
         child: FutureBuilder<List<Payment>>(
           future: payments,
@@ -75,7 +75,7 @@ class _CustomerPaymentsScreenState extends State<CustomerPaymentsScreen> {
                     Text(row.collectionNumber, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xff475569))),
                     const SizedBox(height: 4),
                     Text('${row.paymentDate == null ? '' : DateFormat('dd MMM yyyy').format(row.paymentDate!.toLocal())}  •  ${_status(row)}'),
-                    if (row.transactionReference?.isNotEmpty == true) Text('Transaction: ${row.transactionReference}'),
+                    Text('File ID: ${row.fileId?.trim().isNotEmpty == true ? row.fileId : 'Not assigned'}'),
                     if (row.remarks?.isNotEmpty == true) Text('Details: ${row.remarks}'),
                     if (row.reversalReason?.isNotEmpty == true) Text('Reversal: ${row.reversalReason}', style: const TextStyle(color: Colors.red)),
                   ]),

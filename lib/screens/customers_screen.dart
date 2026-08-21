@@ -4,6 +4,7 @@ import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
+import 'package:real_estate_crm_sales/screens/customer_payments_screen.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -18,9 +19,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
   void _refresh() { if (mounted) setState(_load); }
 
   @override Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('My Clients'), actions: [IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh))]),
-      body: RefreshIndicator(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+      appBar: AppBar(
+        title: const Text('My Clients'),
+        actions: [IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh))],
+        bottom: const TabBar(tabs: [Tab(text: 'Clients', icon: Icon(Icons.people_alt_rounded)), Tab(text: 'Payments', icon: Icon(Icons.receipt_long_rounded))]),
+      ),
+      body: TabBarView(children: [RefreshIndicator(
         onRefresh: () async { _refresh(); await data; },
         child: FutureBuilder<List<Customer>>(
           future: data,
@@ -46,6 +53,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             );
           },
         ),
+      ), const CustomerPaymentsScreen()]),
       ),
     );
   }

@@ -2,6 +2,7 @@ class Payment {
   const Payment({
     required this.id,
     required this.customer,
+    this.fileId,
     required this.collectionNumber,
     required this.amount,
     required this.status,
@@ -19,6 +20,7 @@ class Payment {
 
   final int id;
   final String customer;
+  final String? fileId;
   final String collectionNumber;
   final String? salesExecutive;
   final num amount;
@@ -37,6 +39,7 @@ class Payment {
     return Payment(
       id: json['id'] as int,
       customer: json['customer'] as String? ?? '',
+      fileId: json['fileId'] as String?,
       collectionNumber: json['collectionNumber'] as String? ?? '',
       salesExecutive: json['salesExecutive'] as String?,
       amount: json['amount'] as num? ?? 0,
