@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:real_estate_crm_sales/screens/commission_screen.dart';
+import 'package:real_estate_crm_sales/screens/customer_payments_screen.dart';
 import 'package:real_estate_crm_sales/screens/customers_screen.dart';
 import 'package:real_estate_crm_sales/screens/dashboard_screen.dart';
 import 'package:real_estate_crm_sales/screens/leads_screen.dart';
@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const DashboardScreen(),
       const LeadsScreen(),
       const CustomersScreen(),
-      const CommissionScreen(),
+      const CustomerPaymentsScreen(),
       const NotificationsScreen(),
       const DailyWorkReportScreen(),
       const ProfileScreen(),
@@ -130,9 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Clients',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined, size: 22),
-            selectedIcon: Icon(Icons.account_balance_wallet_rounded, color: Color(0xff0f766e), size: 22),
-            label: 'Wallet',
+            icon: Icon(Icons.receipt_long_outlined, size: 22),
+            selectedIcon: Icon(Icons.receipt_long_rounded, color: Color(0xff0f766e), size: 22),
+            label: 'Payments',
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_outlined, size: 22),

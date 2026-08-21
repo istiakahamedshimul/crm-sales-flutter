@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
@@ -30,7 +29,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       apiClient.getProfile(),
       apiClient.getLeads(),
       apiClient.getBookedCustomers(),
-      apiClient.getCommission(),
       apiClient.getDashboardSummary(),
     ]);
 
@@ -38,9 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       profile: results[0] as Map<String, dynamic>,
       leads: results[1] as List<Lead>,
       customers: results[2] as List<Customer>,
-      totalOutstanding: ((results[4] as Map<String, dynamic>)['totalOutstanding'] as num?) ?? 0,
-      currentTarget: (results[4] as Map<String, dynamic>)['currentTarget'] as Map<String, dynamic>?,
-      commission: results[3] as CommissionSummary,
+      totalOutstanding: ((results[3] as Map<String, dynamic>)['totalOutstanding'] as num?) ?? 0,
+      currentTarget: (results[3] as Map<String, dynamic>)['currentTarget'] as Map<String, dynamic>?,
     );
   }
 
@@ -388,19 +385,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _MetricTile(label: 'Collection', value: money(totalOutstanding), icon: Icons.account_balance_wallet_outlined, tileColor: const Color(0xffd97706)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MetricTile(label: 'Commissions', value: money(item.commission.totalEarned), icon: Icons.workspace_premium_rounded, tileColor: const Color(0xff7c3aed)),
-                    ),
-                  ],
-                ),
+              _MetricTile(
+                label: 'Collection',
+                value: money((item.currentTarget?['collectionAchieved'] as num?) ?? 0),
+                icon: Icons.payments_rounded,
+                tileColor: const Color(0xffd97706),
               ),
               const SizedBox(height: 10),
               // Lead queue card with fast quick actions
@@ -707,7 +696,6 @@ class _DashboardData {
     required this.customers,
     required this.totalOutstanding,
     required this.currentTarget,
-    required this.commission,
   });
 
   final Map<String, dynamic> profile;
@@ -715,5 +703,4 @@ class _DashboardData {
   final List<Customer> customers;
   final num totalOutstanding;
   final Map<String, dynamic>? currentTarget;
-  final CommissionSummary commission;
 }

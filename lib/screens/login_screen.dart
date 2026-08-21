@@ -199,7 +199,7 @@ class _LoginHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Manage assigned leads, upload follow-up logs, submit collection receipts, and track your wallet.',
+            'Manage assigned leads, upload follow-up logs, and track payments from your booked customers.',
             style: TextStyle(
               color: Color(0xffcbd5e1),
               fontSize: 14,

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:real_estate_crm_sales/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:real_estate_crm_sales/models/commission_summary.dart';
 import 'package:real_estate_crm_sales/models/customer.dart';
 import 'package:real_estate_crm_sales/models/follow_up.dart';
 import 'package:real_estate_crm_sales/models/lead.dart';
@@ -12,6 +11,7 @@ import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 import 'package:real_estate_crm_sales/models/app_notification.dart';
+import 'package:real_estate_crm_sales/models/payment.dart';
 
 class ApiClient {
   String token = '';
@@ -224,15 +224,9 @@ class ApiClient {
     _throwIfFailed(response);
   }
 
-  Future<CommissionSummary> getCommission() async {
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiBaseUrl}/commissions/me'),
-      headers: headers,
-    );
-
-    _throwIfFailed(response);
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return CommissionSummary.fromJson(data);
+  Future<List<Payment>> getMyCustomerPayments() async {
+    final data = await _getList('/payments/mine');
+    return data.map(Payment.fromJson).toList();
   }
 
   Future<String> uploadFile(String path, {String category = 'proofs'}) async {
