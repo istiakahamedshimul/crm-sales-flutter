@@ -97,15 +97,27 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          StatusPill(label: customer.paymentStatus),
-                          if (customer.salesExecutive != null && customer.salesExecutive!.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            StatusPill(label: 'Exec: ${customer.salesExecutive}'),
-                          ],
-                        ],
+                      Builder(
+                        builder: (context) {
+                          final showPaymentStatus = customer.paymentStatus.toLowerCase().trim() != 'unpaid';
+                          final showSalesExecutive = customer.salesExecutive != null && customer.salesExecutive!.trim().isNotEmpty;
+                          if (showPaymentStatus || showSalesExecutive) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Row(
+                                children: [
+                                  if (showPaymentStatus)
+                                    StatusPill(label: customer.paymentStatus),
+                                  if (showPaymentStatus && showSalesExecutive)
+                                    const SizedBox(width: 8),
+                                  if (showSalesExecutive)
+                                    StatusPill(label: 'Exec: ${customer.salesExecutive}'),
+                                ],
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
                       ),
                       const Divider(height: 24, color: Color(0xfff1f5f9)),
                       Row(
