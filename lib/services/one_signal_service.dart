@@ -8,8 +8,6 @@ class OneSignalService {
 
   final navigatorKey = GlobalKey<NavigatorState>();
   bool _initialized = false;
-  bool _dialogShown = false;
-  bool _registrationPending = false;
   bool _openAssignedLeadsPending = false;
   bool Function()? _openAssignedLeads;
 
@@ -20,9 +18,6 @@ class OneSignalService {
     await OneSignal.initialize(_appId);
     _initialized = true;
 
-    OneSignal.User.pushSubscription.addObserver((state) {
-      _handleSubscriptionId(state.current.id);
-    });
     OneSignal.Notifications.addClickListener((event) {
       final data = event.notification.additionalData;
       if (data?['screen'] == 'assigned_leads') {
@@ -30,10 +25,6 @@ class OneSignalService {
         _deliverPendingNavigation();
       }
     });
-    _handleSubscriptionId(OneSignal.User.pushSubscription.id);
-
-    // The navigator is attached by MaterialApp after initialization.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showDialogIfReady());
   }
 
   Future<void> login(String externalId) async {
@@ -86,39 +77,6 @@ class OneSignalService {
     final pending = _openAssignedLeadsPending;
     _openAssignedLeadsPending = false;
     return pending;
-  }
-
-  void _handleSubscriptionId(String? id) {
-    if (id == null || id.isEmpty || id.startsWith('local-')) return;
-    _registrationPending = true;
-    _showDialogIfReady();
-  }
-
-  void _showDialogIfReady() {
-    final context = navigatorKey.currentContext;
-    if (!_registrationPending || _dialogShown || context == null) return;
-
-    _dialogShown = true;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Your OneSignal SDK integration is complete!'),
-        content: const Text(
-          'You can now send Push Notifications & In-App Messages through '
-          'OneSignal. Tap below to enable push notifications.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await OneSignal.Notifications.requestPermission(true);
-            },
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _requireInitialized() {

@@ -31,8 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
     index = widget.initialIndex;
     _pageController = PageController(initialPage: index);
     oneSignalService.setAssignedLeadsNavigationHandler(_openAssignedLeads);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startLocationTracking());
-    
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _startLocationTracking());
+
     // Auto-sync in the background every 20 seconds to keep all screens updated live
     _syncTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
       if (mounted) {
@@ -45,14 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startLocationTracking() async {
     final enabled = await locationTrackingService.loadEnabled();
     if (!enabled) return;
-    final started = await locationTrackingService.startWithPermission();
-    if (!started && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Location access is required while doing field work. Enable precise location in Settings.'),
-        action: SnackBarAction(label: 'Settings', onPressed: locationTrackingService.openSettings),
-        duration: const Duration(seconds: 8),
-      ));
-    }
+    await locationTrackingService.startWithPermission();
   }
 
   @override
@@ -91,7 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
             index = value;
           });
         },
-        physics: const ClampingScrollPhysics(), // Slide screen by screen smoothly
+        physics:
+            const ClampingScrollPhysics(), // Slide screen by screen smoothly
         children: pages,
       ),
       bottomNavigationBar: NavigationBar(
@@ -114,28 +109,37 @@ class _HomeScreenState extends State<HomeScreen> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.grid_view_rounded, size: 22),
-            selectedIcon: Icon(Icons.grid_view_rounded, color: Color(0xff0f766e), size: 22),
+            selectedIcon: Icon(Icons.grid_view_rounded,
+                color: Color(0xff0f766e), size: 22),
             label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.assignment_ind_outlined, size: 22),
-            selectedIcon: Icon(Icons.assignment_ind_rounded, color: Color(0xff0f766e), size: 22),
+            selectedIcon: Icon(Icons.assignment_ind_rounded,
+                color: Color(0xff0f766e), size: 22),
             label: 'Pipeline',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline_rounded, size: 22),
-            selectedIcon: Icon(Icons.people_alt_rounded, color: Color(0xff0f766e), size: 22),
+            selectedIcon: Icon(Icons.people_alt_rounded,
+                color: Color(0xff0f766e), size: 22),
             label: 'Clients',
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_outlined, size: 22),
-            selectedIcon: Icon(Icons.notifications_rounded, color: Color(0xff0f766e), size: 22),
+            selectedIcon: Icon(Icons.notifications_rounded,
+                color: Color(0xff0f766e), size: 22),
             label: 'Alerts',
           ),
-          NavigationDestination(icon:Icon(Icons.edit_note_rounded,size:22),selectedIcon:Icon(Icons.edit_note_rounded,color:Color(0xff0f766e),size:22),label:'Report'),
+          NavigationDestination(
+              icon: Icon(Icons.edit_note_rounded, size: 22),
+              selectedIcon: Icon(Icons.edit_note_rounded,
+                  color: Color(0xff0f766e), size: 22),
+              label: 'Report'),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded, size: 22),
-            selectedIcon: Icon(Icons.person_rounded, color: Color(0xff0f766e), size: 22),
+            selectedIcon:
+                Icon(Icons.person_rounded, color: Color(0xff0f766e), size: 22),
             label: 'Profile',
           ),
         ],

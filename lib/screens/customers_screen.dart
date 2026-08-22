@@ -5,6 +5,9 @@ import 'package:real_estate_crm_sales/models/financial_summary.dart';
 import 'package:real_estate_crm_sales/services/api_client.dart';
 import 'package:real_estate_crm_sales/services/app_events.dart';
 import 'package:real_estate_crm_sales/screens/customer_payments_screen.dart';
+import 'package:real_estate_crm_sales/shared/crm_format.dart';
+import 'package:real_estate_crm_sales/shared/contact_actions.dart';
+import 'package:real_estate_crm_sales/widgets/sales_card.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -22,6 +25,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+      backgroundColor: const Color(0xfff8fafc),
       appBar: AppBar(
         title: const Text('My Clients'),
         actions: [IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh))],
@@ -39,16 +43,112 @@ class _CustomersScreenState extends State<CustomersScreen> {
             if (rows.isEmpty) return ListView(children: const [Padding(padding: EdgeInsets.all(48), child: Center(child: Text('No assigned booked customers.')))]);
             return ListView.separated(
               padding: const EdgeInsets.all(12), itemCount: rows.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, index) {
                 final customer = rows[index];
-                return Card(child: ListTile(
-                  leading: CircleAvatar(child: Text(customer.name.isEmpty ? 'C' : customer.name[0])),
-                  title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  subtitle: Text('${customer.project ?? 'No project'}\n${customer.phone}'), isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right),
+                return SalesCard(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CustomerFinancialScreen(customer: customer))),
-                ));
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  customer.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xff0f172a),
+                                  ),
+                                ),
+                                if (customer.project != null) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.apartment_rounded, size: 14, color: Color(0xff64748b)),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          customer.project!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Color(0xff475569),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          StatusPill(
+                            label: customer.projectType == null ? 'General' : enumLabel(projectTypes, customer.projectType),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          StatusPill(label: customer.paymentStatus),
+                          if (customer.salesExecutive != null && customer.salesExecutive!.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            StatusPill(label: 'Exec: ${customer.salesExecutive}'),
+                          ],
+                        ],
+                      ),
+                      const Divider(height: 24, color: Color(0xfff1f5f9)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.phone_iphone_rounded, size: 14, color: Color(0xff64748b)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  customer.phone,
+                                  style: const TextStyle(
+                                    color: Color(0xff64748b),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ActionButton(
+                                icon: const Icon(Icons.call, size: 18, color: Color(0xff475569)),
+                                onPressed: () => callPhone(context, customer.phone),
+                                tooltip: 'Call client',
+                              ),
+                              const SizedBox(width: 6),
+                              _ActionButton(
+                                icon: const WhatsAppIcon(size: 18),
+                                onPressed: () => openWhatsApp(context, customer.phone),
+                                tooltip: 'WhatsApp client',
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.chevron_right, color: Color(0xff94a3b8)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
               },
             );
           },
@@ -58,6 +158,43 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 }
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.onPressed,
+    required this.tooltip,
+  });
+
+  final Widget icon;
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: const Color(0xfff1f5f9),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: const Color(0xffe2e8f0),
+              width: 1.0,
+            ),
+          ),
+          child: Center(child: icon),
+        ),
+      ),
+    );
+  }
+}
+
 
 class CustomerFinancialScreen extends StatelessWidget {
   const CustomerFinancialScreen({super.key, required this.customer});

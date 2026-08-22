@@ -36,26 +36,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       profile: results[0] as Map<String, dynamic>,
       leads: results[1] as List<Lead>,
       customers: results[2] as List<Customer>,
-      totalOutstanding: ((results[3] as Map<String, dynamic>)['totalOutstanding'] as num?) ?? 0,
-      currentTarget: (results[3] as Map<String, dynamic>)['currentTarget'] as Map<String, dynamic>?,
+      totalOutstanding:
+          ((results[3] as Map<String, dynamic>)['totalOutstanding'] as num?) ??
+              0,
+      currentTarget: (results[3] as Map<String, dynamic>)['currentTarget']
+          as Map<String, dynamic>?,
     );
   }
 
   @override
   void initState() {
     super.initState();
-    locationTrackingService.loadEnabled().then((value) { if (mounted) setState(() => _locationEnabled = value); });
+    locationTrackingService.loadEnabled().then((value) {
+      if (mounted) setState(() => _locationEnabled = value);
+    });
     AppEvents.instance.addListener(_onAppReload);
   }
 
   Future<void> _setLocationTracking(bool enabled) async {
-    setState(() { _locationEnabled = enabled; _locationChanging = true; });
+    setState(() {
+      _locationEnabled = enabled;
+      _locationChanging = true;
+    });
     final saved = await locationTrackingService.setEnabled(enabled);
     if (!mounted) return;
     setState(() => _locationChanging = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(saved
-        ? (enabled ? 'App location tracking turned on.' : 'App location tracking turned off.')
-        : 'Could not save the location tracking setting. Please try again.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(saved
+            ? (enabled
+                ? 'App location tracking turned on.'
+                : 'App location tracking turned off.')
+            : 'Could not save the location tracking setting. Please try again.')));
   }
 
   @override
@@ -76,7 +87,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Logout'),
-        content: const Text('Are you sure you want to sign out from your sales workspace?'),
+        content: const Text(
+            'Are you sure you want to sign out from your sales workspace?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -84,7 +96,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xffe11d48)),
+            style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xffe11d48)),
             child: const Text('Log Out'),
           ),
         ],
@@ -93,7 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (confirm != true) return;
 
-    locationTrackingService.stop();
+    await locationTrackingService.stopAndUnschedule();
     await oneSignalService.logout();
     await apiClient.clearSession();
     if (!context.mounted) return;
@@ -103,20 +116,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _showTargetHistory(BuildContext context) async {
-    showDialog<void>(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()));
     try {
       final rows = await apiClient.getTargetHistory();
       if (!context.mounted) return;
       Navigator.pop(context);
-      await showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (context) => SafeArea(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Monthly Target Report', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)), const SizedBox(height: 14),
-        if (rows.isEmpty) const Padding(padding: EdgeInsets.symmetric(vertical: 28), child: Center(child: Text('No monthly targets have been set.')))
-        else Flexible(child: ListView.separated(shrinkWrap: true, itemCount: rows.length, separatorBuilder: (_, __) => const Divider(), itemBuilder: (_, index) => _TargetHistoryRow(row: rows[index]))),
-      ]))));
+      await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => SafeArea(
+              child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Monthly Target Report',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 14),
+                        if (rows.isEmpty)
+                          const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 28),
+                              child: Center(
+                                  child: Text(
+                                      'No monthly targets have been set.')))
+                        else
+                          Flexible(
+                              child: ListView.separated(
+                                  shrinkWrap: true,
+                                  itemCount: rows.length,
+                                  separatorBuilder: (_, __) => const Divider(),
+                                  itemBuilder: (_, index) =>
+                                      _TargetHistoryRow(row: rows[index]))),
+                      ]))));
     } catch (error) {
       if (!context.mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', ''))));
     }
   }
 
@@ -129,7 +170,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton.filledTonal(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesPerformanceScreen())),
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const SalesPerformanceScreen())),
             icon: const Icon(Icons.assessment_rounded, size: 20),
             tooltip: 'Filtered Performance',
           ),
@@ -142,7 +186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
           IconButton.filledTonal(
             onPressed: () => _logout(context),
-            icon: const Icon(Icons.logout_rounded, color: Color(0xffe11d48), size: 20),
+            icon: const Icon(Icons.logout_rounded,
+                color: Color(0xffe11d48), size: 20),
             tooltip: 'Log Out',
           ),
         ],
@@ -150,7 +195,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: FutureBuilder<_DashboardData>(
         future: data,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return const Center(
               heightFactor: 6,
               child: CircularProgressIndicator(),
@@ -182,15 +228,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final item = snapshot.data!;
           final totalOutstanding = item.totalOutstanding;
 
-          final String userName = item.profile['fullName']?.toString() ?? 'Sales Executive';
-          final String userEmail = item.profile['email']?.toString() ?? 'sales@crm.local';
+          final String userName =
+              item.profile['fullName']?.toString() ?? 'Sales Executive';
+          final String userEmail =
+              item.profile['email']?.toString() ?? 'sales@crm.local';
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Premium profile card & compact Location Tracking Toggle
               SalesCard(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
                     Container(
@@ -245,20 +294,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _locationEnabled ? const Color(0xffeff6ff) : const Color(0xfffff1f2),
+                        color: _locationEnabled
+                            ? const Color(0xffeff6ff)
+                            : const Color(0xfffff1f2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _locationEnabled ? const Color(0xffdbeafe) : const Color(0xffffe4e6),
+                          color: _locationEnabled
+                              ? const Color(0xffdbeafe)
+                              : const Color(0xffffe4e6),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _locationEnabled ? Icons.location_on_rounded : Icons.location_off_rounded,
-                            color: _locationEnabled ? const Color(0xff2563eb) : const Color(0xffe11d48),
+                            _locationEnabled
+                                ? Icons.location_on_rounded
+                                : Icons.location_off_rounded,
+                            color: _locationEnabled
+                                ? const Color(0xff2563eb)
+                                : const Color(0xffe11d48),
                             size: 14,
                           ),
                           const SizedBox(width: 4),
@@ -267,7 +325,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: _locationEnabled ? const Color(0xff2563eb) : const Color(0xffe11d48),
+                              color: _locationEnabled
+                                  ? const Color(0xff2563eb)
+                                  : const Color(0xffe11d48),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -275,7 +335,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             scale: 0.7,
                             child: Switch.adaptive(
                               value: _locationEnabled,
-                              onChanged: _locationChanging ? null : _setLocationTracking,
+                              onChanged: _locationChanging
+                                  ? null
+                                  : _setLocationTracking,
                               activeColor: const Color(0xff2563eb),
                             ),
                           ),
@@ -291,7 +353,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => _showTargetHistory(context),
                   borderRadius: BorderRadius.circular(16),
                   child: SalesCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -309,14 +372,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             TextButton.icon(
                               onPressed: () => _showTargetHistory(context),
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               icon: const Icon(Icons.history_rounded, size: 14),
                               label: const Text(
                                 'History',
-                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 11),
                               ),
                             ),
                           ],
@@ -329,14 +394,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _TargetProgressTile(
                                 label: 'Target Unit',
                                 icon: Icons.flag_rounded,
-                                achievedStr: '${item.currentTarget!['salesUnitsAchieved']}',
-                                targetStr: '${item.currentTarget!['salesUnitTarget']}',
-                                progress: ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0) > 0
-                                    ? (((item.currentTarget!['salesUnitsAchieved'] as num?) ?? 0) /
-                                             ((item.currentTarget!['salesUnitTarget'] as num?) ?? 0))
-                                         .clamp(0.0, 1.0)
+                                achievedStr:
+                                    '${item.currentTarget!['salesUnitsAchieved']}',
+                                targetStr:
+                                    '${item.currentTarget!['salesUnitTarget']}',
+                                progress: ((item.currentTarget![
+                                                'salesUnitTarget'] as num?) ??
+                                            0) >
+                                        0
+                                    ? (((item.currentTarget![
+                                                        'salesUnitsAchieved']
+                                                    as num?) ??
+                                                0) /
+                                            ((item.currentTarget![
+                                                        'salesUnitTarget']
+                                                    as num?) ??
+                                                0))
+                                        .clamp(0.0, 1.0)
                                     : 0.0,
-                                variance: (item.currentTarget!['salesUnitVariance'] as num?) ?? 0,
+                                variance:
+                                    (item.currentTarget!['salesUnitVariance']
+                                            as num?) ??
+                                        0,
                                 moneyValue: false,
                               ),
                             ),
@@ -351,14 +430,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _TargetProgressTile(
                                 label: 'Collection',
                                 icon: Icons.payments_rounded,
-                                achievedStr: moneyCompact((item.currentTarget!['collectionAchieved'] as num?) ?? 0),
-                                targetStr: moneyCompact((item.currentTarget!['collectionTarget'] as num?) ?? 0),
-                                progress: ((item.currentTarget!['collectionTarget'] as num?) ?? 0) > 0
-                                    ? (((item.currentTarget!['collectionAchieved'] as num?) ?? 0) /
-                                             ((item.currentTarget!['collectionTarget'] as num?) ?? 0))
-                                         .clamp(0.0, 1.0)
+                                achievedStr: moneyCompact(
+                                    (item.currentTarget!['collectionAchieved']
+                                            as num?) ??
+                                        0),
+                                targetStr: moneyCompact(
+                                    (item.currentTarget!['collectionTarget']
+                                            as num?) ??
+                                        0),
+                                progress: ((item.currentTarget![
+                                                'collectionTarget'] as num?) ??
+                                            0) >
+                                        0
+                                    ? (((item.currentTarget![
+                                                        'collectionAchieved']
+                                                    as num?) ??
+                                                0) /
+                                            ((item.currentTarget![
+                                                        'collectionTarget']
+                                                    as num?) ??
+                                                0))
+                                        .clamp(0.0, 1.0)
                                     : 0.0,
-                                variance: (item.currentTarget!['collectionVariance'] as num?) ?? 0,
+                                variance:
+                                    (item.currentTarget!['collectionVariance']
+                                            as num?) ??
+                                        0,
                                 moneyValue: true,
                               ),
                             ),
@@ -375,11 +472,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: _MetricTile(label: 'Assigned Leads', value: item.leads.length.toString(), icon: Icons.person_search_rounded, tileColor: const Color(0xff2563eb)),
+                      child: _MetricTile(
+                          label: 'Assigned Leads',
+                          value: item.leads.length.toString(),
+                          icon: Icons.person_search_rounded,
+                          tileColor: const Color(0xff2563eb)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MetricTile(label: 'Booked Clients', value: item.customers.length.toString(), icon: Icons.people_alt_rounded, tileColor: const Color(0xff0f766e)),
+                      child: _MetricTile(
+                          label: 'Booked Clients',
+                          value: item.customers.length.toString(),
+                          icon: Icons.people_alt_rounded,
+                          tileColor: const Color(0xff0f766e)),
                     ),
                   ],
                 ),
@@ -387,14 +492,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               _MetricTile(
                 label: 'Collection',
-                value: money((item.currentTarget?['collectionAchieved'] as num?) ?? 0),
+                value: money(
+                    (item.currentTarget?['collectionAchieved'] as num?) ?? 0),
                 icon: Icons.payments_rounded,
                 tileColor: const Color(0xffd97706),
               ),
               const SizedBox(height: 10),
               // Lead queue card with fast quick actions
               SalesCard(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -411,7 +518,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         if (item.leads.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xffeff6ff),
                               borderRadius: BorderRadius.circular(12),
@@ -448,7 +556,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: item.leads.take(4).length,
-                        separatorBuilder: (_, __) => const Divider(color: Color(0xfff1f5f9), height: 10),
+                        separatorBuilder: (_, __) =>
+                            const Divider(color: Color(0xfff1f5f9), height: 10),
                         itemBuilder: (context, index) {
                           final lead = item.leads[index];
                           return Row(
@@ -483,7 +592,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   IconButton.filledTonal(
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
-                                    onPressed: () => callPhone(context, lead.phone),
+                                    onPressed: () =>
+                                        callPhone(context, lead.phone),
                                     icon: const Icon(Icons.call, size: 14),
                                     tooltip: 'Call client',
                                   ),
@@ -491,12 +601,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   IconButton.filledTonal(
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
-                                    onPressed: () => openWhatsApp(context, lead.phone),
+                                    onPressed: () =>
+                                        openWhatsApp(context, lead.phone),
                                     icon: const WhatsAppIcon(size: 14),
                                     tooltip: 'WhatsApp client',
                                   ),
                                   const SizedBox(width: 6),
-                                  StatusPill(label: enumLabel(leadStatuses, lead.status)),
+                                  StatusPill(
+                                      label:
+                                          enumLabel(leadStatuses, lead.status)),
                                 ],
                               ),
                             ],
@@ -541,7 +654,9 @@ class _MetricTile extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: tileColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+                color: tileColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: tileColor, size: 20),
           ),
           const SizedBox(height: 12),
@@ -596,7 +711,8 @@ class _TargetProgressTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final over = variance >= 0;
     final progressPercent = (progress * 100).toStringAsFixed(0);
-    final varianceColor = over ? const Color(0xff067647) : const Color(0xffb42318);
+    final varianceColor =
+        over ? const Color(0xff067647) : const Color(0xffb42318);
     final varianceBg = over ? const Color(0xffecfdf3) : const Color(0xfffef3f2);
 
     return Column(
@@ -673,9 +789,45 @@ class _TargetProgressTile extends StatelessWidget {
 }
 
 class _TargetHistoryRow extends StatelessWidget {
-  const _TargetHistoryRow({required this.row}); final Map<String, dynamic> row;
-  @override Widget build(BuildContext context) { final unitVariance = (row['salesUnitVariance'] as num?) ?? 0; final collectionVariance = (row['collectionVariance'] as num?) ?? 0; return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shortDate(row['month']?.toString()), style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 6), _line('Target Unit', '${row['salesUnitsAchieved']} / ${row['salesUnitTarget']} units', unitVariance, false), _line('Collection', '${money((row['collectionAchieved'] as num?) ?? 0)} / ${money((row['collectionTarget'] as num?) ?? 0)}', collectionVariance, true)])); }
-  Widget _line(String label, String values, num variance, bool isMoney) => Padding(padding: const EdgeInsets.only(top: 4), child: Row(children: [SizedBox(width: 82, child: Text(label)), Expanded(child: Text(values)), Text('${variance >= 0 ? 'Over' : 'Short'} ${isMoney ? money(variance.abs()) : '${variance.abs()} units'}', style: TextStyle(color: variance >= 0 ? const Color(0xff067647) : const Color(0xffb42318), fontWeight: FontWeight.w700))]));
+  const _TargetHistoryRow({required this.row});
+  final Map<String, dynamic> row;
+  @override
+  Widget build(BuildContext context) {
+    final unitVariance = (row['salesUnitVariance'] as num?) ?? 0;
+    final collectionVariance = (row['collectionVariance'] as num?) ?? 0;
+    return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(shortDate(row['month']?.toString()),
+              style: const TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 6),
+          _line(
+              'Target Unit',
+              '${row['salesUnitsAchieved']} / ${row['salesUnitTarget']} units',
+              unitVariance,
+              false),
+          _line(
+              'Collection',
+              '${money((row['collectionAchieved'] as num?) ?? 0)} / ${money((row['collectionTarget'] as num?) ?? 0)}',
+              collectionVariance,
+              true)
+        ]));
+  }
+
+  Widget _line(String label, String values, num variance, bool isMoney) =>
+      Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(children: [
+            SizedBox(width: 82, child: Text(label)),
+            Expanded(child: Text(values)),
+            Text(
+                '${variance >= 0 ? 'Over' : 'Short'} ${isMoney ? money(variance.abs()) : '${variance.abs()} units'}',
+                style: TextStyle(
+                    color: variance >= 0
+                        ? const Color(0xff067647)
+                        : const Color(0xffb42318),
+                    fontWeight: FontWeight.w700))
+          ]));
 }
 
 String moneyCompact(num value) {
