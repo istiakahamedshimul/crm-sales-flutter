@@ -29,7 +29,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       appBar: AppBar(
         title: const Text('My Clients'),
         actions: [IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh))],
-        bottom: const TabBar(tabs: [Tab(text: 'Clients', icon: Icon(Icons.people_alt_rounded)), Tab(text: 'Payments', icon: Icon(Icons.receipt_long_rounded))]),
+        bottom: const TabBar(tabs: [Tab(text: 'Clients', icon: Icon(Icons.people_alt_rounded)), Tab(text: 'Collections', icon: Icon(Icons.receipt_long_rounded))]),
       ),
       body: TabBarView(children: [RefreshIndicator(
         onRefresh: () async { _refresh(); await data; },
@@ -221,7 +221,7 @@ class CustomerFinancialScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) return Center(child: snapshot.hasError ? Text('${snapshot.error}') : const CircularProgressIndicator());
           final summary = snapshot.data!;
-          final values = [('Total agreed', summary.totalAgreedAmount), ('Total paid', summary.totalPaid), ('Current due', summary.currentDue), ('Overdue', summary.overdueAmount), ('Outstanding', summary.outstandingBalance)];
+          final values = [('Total agreed', summary.totalAgreedAmount), ('Total paid', summary.totalPaid), ('Current due', summary.currentDue), ('CA due (${summary.dueCount} month${summary.dueCount == 1 ? '' : 's'})', summary.caDueAmount), ('Overdue', summary.overdueAmount), ('Outstanding', summary.outstandingBalance)];
           return ListView(padding: const EdgeInsets.all(16), children: [
             Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(summary.paymentStatus, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),

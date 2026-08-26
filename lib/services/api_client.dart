@@ -12,6 +12,7 @@ import 'package:real_estate_crm_sales/models/project.dart';
 import 'package:real_estate_crm_sales/models/vehicle_booking.dart';
 import 'package:real_estate_crm_sales/models/app_notification.dart';
 import 'package:real_estate_crm_sales/models/payment.dart';
+import 'package:real_estate_crm_sales/models/monthly_collection.dart';
 
 class ApiClient {
   String token = '';
@@ -227,6 +228,10 @@ class ApiClient {
   Future<List<Payment>> getMyCustomerPayments() async {
     final data = await _getList('/payments/mine');
     return data.map(Payment.fromJson).toList();
+  }
+  Future<List<MonthlyCollection>> getMyMonthlyCollections() async {
+    final data = await _getList('/ca/monthly-collections/mine');
+    return data.map(MonthlyCollection.fromJson).toList();
   }
 
   Future<String> uploadFile(String path, {String category = 'proofs'}) async {
