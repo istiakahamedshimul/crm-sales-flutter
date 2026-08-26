@@ -47,6 +47,9 @@ class ApiClient {
 
     _throwIfFailed(response);
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['role'] != 'SalesExecutive') {
+      throw Exception('Only Sales Executive accounts can use the sales app. Group Leaders must use the admin panel.');
+    }
     token = data['token'] as String;
     userId = data['userId'] as int;
     final prefs = await SharedPreferences.getInstance();
